@@ -101,7 +101,7 @@ nav a.router-link-exact-active {
   margin-right: auto;
   padding: 0;
   box-sizing: border-box;
-  text-align: center;
+  text-align: left;
 }
 
 .main-content {

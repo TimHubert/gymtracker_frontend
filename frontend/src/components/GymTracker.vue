@@ -2,7 +2,6 @@
   <div class="gym-tracker">
     <h1>🏋️ Gym Tracker</h1>
 
-    
     <form @submit.prevent="übungHinzufügen">
       <input v-model="neueÜbung.name" placeholder="Übung" required />
       <input v-model.number="neueÜbung.wdh" type="number" placeholder="Wiederholungen" required />

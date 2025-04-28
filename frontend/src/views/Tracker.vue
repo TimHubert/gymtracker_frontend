@@ -1,7 +1,5 @@
 <template>
   <div>
-    <h1>Tracker</h1>
-
     <WorkoutView />
   </div>
 </template>
