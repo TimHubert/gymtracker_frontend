@@ -1,7 +1,6 @@
 <template>
   <div class="home">
-    <h1>Willkommen</h1>
-    <p>Wählen Sie eine Option aus dem Menü.</p>
+    <NewWorkout />
   </div>
 </template>
 
@@ -9,4 +8,8 @@
 export default {
   name: 'Home',
 }
+</script>
+
+<script setup>
+import NewWorkout from '../components/NewWorkout.vue'
 </script>
