@@ -1,19 +1,23 @@
 <template>
   <div>
     <h1>Neues Workout</h1>
-    <input class="input-line" placeholder="Name des Workouts" required />
+    <input class="input-line" placeholder="Name des Workouts" required v-model="workout.name" />
 
-    <div v-if="zeigeÜbungen">
+    <div class="column" v-if="zeigeÜbungen">
       <div v-for="(übung, index) in übungen" :key="index" class="exercise">
-        <input v-model="übung.name" placeholder="Übung" required />
-        <input v-model="übung.gerät" placeholder="Gerät" required />
-        <select v-model="übung.muskelgruppe" id="muskelgruppe">
-          <option disabled value="">Muskelgruppe</option>
-          <option v-for="gruppe in übung.muskelgruppen" :key="gruppe" :value="gruppe">
-            {{ gruppe }}
-          </option>
-        </select>
-        <button @click="removeÜbung(index)" type="button">-</button>
+        <div>
+          <input v-model="übung.name" placeholder="Übung" required />
+        </div>
+        <div><input v-model="übung.gerät" placeholder="Gerät" required /></div>
+        <div style="display: flex; align-items: center">
+          <select v-model="übung.muskelgruppe" id="muskelgruppe">
+            <option disabled value="">Muskelgruppe</option>
+            <option v-for="gruppe in übung.muskelgruppen" :key="gruppe" :value="gruppe">
+              {{ gruppe }}
+            </option>
+          </select>
+          <button @click="removeÜbung(index)" type="button">-</button>
+        </div>
       </div>
     </div>
 
@@ -22,70 +26,39 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'NewWorkout',
-  data() {
-    return {
-      zeigeÜbungen: false,
-      übungen: [
-        {
-          name: '',
-          gerät: '',
-          muskelgruppe: '',
-          muskelgruppen: ['Brust', 'Lat', 'Trizeps', 'Bizeps', 'Schulter', 'Beine'],
-        },
-      ],
-    }
-  },
-
-  methods: {
-    toggleÜbungen() {
-      if (!this.zeigeÜbungen) {
-        this.zeigeÜbungen = true
-      } else {
-        this.addÜbung()
-      }
-    },
-    addÜbung() {
-      this.übungen.push({
-        name: '',
-        gerät: '',
-        muskelgruppe: '',
-        muskelgruppen: ['Brust', 'Lat', 'Trizeps', 'Bizeps', 'Schulter', 'Beine'],
-      })
-    },
-    removeÜbung(index) {
-      this.übungen.splice(index, 1)
-    },
-    async submitWorkout() {
-      try {
-        const response = await fetch('http://localhost:8080/workout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(this.workout),
-        })
-
-        if (!response.ok) {
-          throw new Error('Fehler beim Erstellen des Workouts')
-        }
-
-        const result = await response.json()
-        console.log('Workout erfolgreich erstellt:', result)
-        alert('Workout erfolgreich erstellt!')
-      } catch (error) {
-        console.error('Fehler:', error)
-        alert('Fehler beim Erstellen des Workouts')
-      }
-    },
-  },
-}
-</script>
-
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
+
+const zeigeÜbungen = ref(false)
+const übungen = ref([
+  {
+    name: '',
+    gerät: '',
+    muskelgruppe: '',
+    muskelgruppen: ['Brust', 'Lat', 'Trizeps', 'Bizeps', 'Schulter', 'Beine'],
+  },
+])
+
+function toggleÜbungen() {
+  if (!zeigeÜbungen.value) {
+    zeigeÜbungen.value = true
+  } else {
+    addÜbung()
+  }
+}
+
+function addÜbung() {
+  übungen.value.push({
+    name: '',
+    gerät: '',
+    muskelgruppe: '',
+    muskelgruppen: ['Brust', 'Lat', 'Trizeps', 'Bizeps', 'Schulter', 'Beine'],
+  })
+}
+
+function removeÜbung(index) {
+  übungen.value.splice(index, 1)
+}
 
 const workout = ref({
   name: '',
@@ -94,33 +67,66 @@ const workout = ref({
   weights: [],
 })
 
-onMounted(() => {
-  const apiUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL
-  //fetch(`${apiUrl}/api/workout`)
-  fetch(`http://localhost:8080/workout`)
-    .then((response) => response.json())
-    .then((data) => {
-      const rawDate = new Date(data.date)
-      const formattedDate = rawDate.toLocaleDateString('de-DE')
+async function submitWorkout() {
+  try {
+    if (!workout.value.name.trim()) {
+      alert('Bitte geben Sie einen Namen für das Workout ein.')
+      return
+    }
 
-      console.log('Workout-Daten:', data)
-      workout.value = {
-        name: data.name,
-        date: formattedDate,
-        exercises: data.exercise,
-        weights: data.weights,
+    for (const übung of übungen.value) {
+      if (!übung.name.trim() || !übung.gerät.trim() || !übung.muskelgruppe.trim()) {
+        alert('Bitte füllen Sie alle Felder für die Übungen aus.')
+        return
       }
+    }
+
+    workout.value.exercises = übungen.value
+    const payload = {
+      name: workout.value.name,
+      exercise: workout.value.exercises.map((exercise) => ({
+        name: exercise.name,
+        gerät: exercise.gerät,
+        muskelgruppe: exercise.muskelgruppe,
+      })),
+    }
+
+    console.log('Gesendete Daten:', JSON.stringify(payload))
+
+    const response = await fetch('http://localhost:8080/workout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
     })
-    .catch((error) => console.error('Fehler beim Abrufen des Workouts:', error))
-})
+
+    if (!response.ok) {
+      throw new Error('Fehler beim Erstellen des Workouts')
+    }
+
+    const result = await response.json()
+    console.log('Workout erfolgreich erstellt:', result)
+    alert('Workout erfolgreich erstellt')
+  } catch (error) {
+    console.error('Fehler:', error)
+    alert('Fehler beim Erstellen des Workouts')
+  }
+}
 </script>
 
 <style>
+.column {
+  display: flex;
+  flex-direction: column;
+  margin-top: 1rem;
+}
 .exercise {
   margin-top: 0.3rem;
 }
 .exercise input,
 .exercise select {
+  width: 100%;
   margin-right: 0.5rem;
   margin-top: 0.2rem;
   padding: 0.5rem;

@@ -70,7 +70,7 @@ const workout = ref({
 onMounted(() => {
   const apiUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL
   //fetch(`${apiUrl}/api/workout`)
-  fetch(`http://localhost:8080/workout`)
+  fetch(`http://localhost:8080/OneWorkout`)
     .then((response) => response.json())
     .then((data) => {
       const rawDate = new Date(data.date)
