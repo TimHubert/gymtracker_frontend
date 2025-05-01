@@ -62,9 +62,7 @@ function removeÜbung(index) {
 
 const workout = ref({
   name: '',
-  date: '',
   exercises: [],
-  weights: [],
 })
 
 async function submitWorkout() {
@@ -86,8 +84,8 @@ async function submitWorkout() {
       name: workout.value.name,
       exercise: workout.value.exercises.map((exercise) => ({
         name: exercise.name,
-        gerät: exercise.gerät,
-        muskelgruppe: exercise.muskelgruppe,
+        equipment: exercise.gerät,
+        targetMuscleGroup: exercise.muskelgruppe,
       })),
     }
 
