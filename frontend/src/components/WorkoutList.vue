@@ -1,37 +1,41 @@
 <template>
   <div class="workout-list">
     <h2>Alle Workouts</h2>
-    <table v-if="flattenedWorkouts.length" class="styled-table">
-      <thead>
-        <tr>
-          <th>Workout</th>
-          <th>Übung</th>
-          <th>Gerät</th>
-          <th>Muskelgruppe</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(item, index) in flattenedWorkouts" :key="index">
-          <td>{{ item.workoutName }}</td>
-          <td>{{ item.exercise.name }}</td>
-          <td>{{ item.exercise.equipment }}</td>
-          <td>{{ item.exercise.targetMuscleGroup }}</td>
-          <td>
-            <button
-              @click="
-                () => {
-                  console.log('Workout ID:', item.workoutId)
-                  deleteWorkout(item.workoutId)
-                }
-              "
-              class="delete-button"
-            >
-              Löschen
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div v-if="workouts.length">
+      <div v-for="(workout, index) in workouts" :key="index" class="workout-table">
+        <h3 style="margin-bottom: 0px; margin-top: 10px">{{ workout.name }}</h3>
+        <table class="styled-table">
+          <thead>
+            <tr>
+              <th>Übung</th>
+              <th>Gerät</th>
+              <th>Muskelgruppe</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(exercise, exIndex) in workout.exercise" :key="exIndex">
+              <td>{{ exercise.name }}</td>
+              <td>{{ exercise.equipment }}</td>
+              <td>{{ exercise.targetMuscleGroup }}</td>
+              <td>
+                <button
+                  @click="
+                    () => {
+                      console.log('Workout ID:', workout.id)
+                      deleteWorkout(workout.id)
+                    }
+                  "
+                  class="delete-button"
+                >
+                  Löschen
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
     <p v-else class="no-workouts">Keine Workouts gefunden.</p>
   </div>
 </template>
@@ -96,7 +100,7 @@ const deleteWorkout = async (exerciseId) => {
 .styled-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 .styled-table th,
@@ -105,6 +109,7 @@ const deleteWorkout = async (exerciseId) => {
   padding: 8px;
   text-align: left;
   color: white;
+  width: 100%;
 }
 
 .styled-table th {
