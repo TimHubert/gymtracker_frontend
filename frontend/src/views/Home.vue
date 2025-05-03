@@ -1,15 +1,11 @@
 <template>
   <div class="home">
     <NewWorkout />
+    <WorkoutList />
   </div>
 </template>
 
-<script>
-export default {
-  name: 'Home',
-}
-</script>
-
 <script setup>
 import NewWorkout from '../components/NewWorkout.vue'
+import WorkoutList from '../components/WorkoutList.vue'
 </script>
