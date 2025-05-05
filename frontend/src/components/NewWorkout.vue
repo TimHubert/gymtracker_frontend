@@ -19,8 +19,8 @@
           <div v-else style="flex: 1; margin-left: 0.5rem">
             <select v-model="übung.name" id="übungname" style="width: 100%">
               <option disabled value="">Name</option>
-              <option v-for="exercise in workouts" :key="exercise.name" :value="exercise.name">
-                {{ exercise.name }}
+              <option v-for="exercise in uniqueExerciseNames" :key="exercise" :value="exercise">
+                {{ exercise }}
               </option>
             </select>
           </div>
@@ -39,12 +39,8 @@
           <div v-else style="flex: 1; margin-left: 0.5rem">
             <select v-model="übung.gerät" id="übungequipment" style="width: 100%">
               <option disabled value="">Gerät</option>
-              <option
-                v-for="exercise in workouts"
-                :key="exercise.equipment"
-                :value="exercise.equipment"
-              >
-                {{ exercise.equipment }}
+              <option v-for="exercise in uniqueEquipmentNames" :key="exercise" :value="exercise">
+                {{ exercise }}
               </option>
             </select>
           </div>
@@ -67,7 +63,7 @@
 </template>
 
 <script setup>
-import { ref, vModelCheckbox, onMounted } from 'vue'
+import { ref, vModelCheckbox, onMounted, computed } from 'vue'
 
 onMounted(() => {
   fetchWorkouts()
@@ -102,6 +98,14 @@ const workout = ref({
 })
 
 const workouts = ref([])
+
+const uniqueExerciseNames = computed(() => {
+  return [...new Set(workouts.value.map((exercise) => exercise.name))]
+})
+
+const uniqueEquipmentNames = computed(() => {
+  return [...new Set(workouts.value.map((exercise) => exercise.equipment))]
+})
 
 function toggleÜbungen() {
   if (!zeigeÜbungen.value) {

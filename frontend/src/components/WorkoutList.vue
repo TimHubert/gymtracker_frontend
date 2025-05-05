@@ -104,11 +104,13 @@ const deleteWorkout = async (workoutId, exId) => {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 1rem;
+  border-collapse: separate;
+  overflow: hidden;
 }
 
 .styled-table th,
 .styled-table td {
-  border: 1px solid #ff7b00;
+  border: 0px solid #ff7b00;
   padding: 8px;
   text-align: left;
   color: white;
@@ -126,6 +128,13 @@ const deleteWorkout = async (workoutId, exId) => {
 
 .styled-table tr:nth-child(odd) {
   background-color: #1e1e1e;
+}
+.styled-table th:first-child {
+  border-top-left-radius: 12px;
+}
+
+.styled-table th:last-child {
+  border-top-right-radius: 12px;
 }
 
 .no-workouts {
