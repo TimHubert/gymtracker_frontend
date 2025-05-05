@@ -22,8 +22,8 @@
                 <button
                   @click="
                     () => {
-                      console.log('Workout ID:', workout.id)
-                      deleteWorkout(workout.id)
+                      console.log('Workout ID:', workout.id, 'Exercise ID:', exercise.id)
+                      deleteWorkout(workout.id, exercise.id)
                     }
                   "
                   class="delete-button"
@@ -50,7 +50,7 @@ const loadWorkouts = () => {
     .then((response) => response.json())
     .then((data) => {
       console.log('Geladene Workouts:', data)
-      workouts.value = data
+      workouts.value = data.filter((workout) => workout.exercise && workout.exercise.length > 0)
     })
     .catch((error) => console.error('Fehler beim Laden der Workouts:', error))
 }
@@ -65,29 +65,32 @@ const flattenedWorkouts = computed(() => {
     workout.exercise.map((ex) => ({
       workoutId: workout.id,
       workoutName: workout.name,
-      exercise: ex,
+      exercise: exercise,
+      exId: exercise.id,
     })),
   )
 })
 
-const deleteWorkout = async (exerciseId) => {
-  if (!exerciseId) {
-    console.error('Ungültige ID:', exerciseId)
+const deleteWorkout = async (workoutId, exId) => {
+  if (!workoutId || !exId) {
+    console.error('Ungültige Parameter:', workoutId, exId)
     return
   }
 
   try {
-    const response = await fetch(`http://localhost:8080/workout/${exerciseId}`, {
+    const response = await fetch(`http://localhost:8080/workout/${workoutId}/${exId}`, {
       method: 'DELETE',
     })
     if (response.ok) {
-      console.log(`Workout mit ID ${exerciseId} erfolgreich gelöscht`)
-      loadWorkouts()
+      console.log(`Exercise mit ID ${exId} in Workout ${workoutId} erfolgreich gelöscht`)
+      window.location.reload()
     } else {
       console.error('Fehler beim Löschen der Übung:', await response.text())
+      window.location.reload()
     }
   } catch (error) {
     console.error('Fehler beim Löschen der Übung:', error)
+    window.location.reload()
   }
 }
 </script>
