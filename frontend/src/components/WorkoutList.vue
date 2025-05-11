@@ -3,7 +3,18 @@
     <h2>Alle Workouts</h2>
     <div v-if="workouts.length">
       <div v-for="(workout, index) in workouts" :key="index" class="workout-table">
-        <h3 style="margin-bottom: 0px; margin-top: 10px">{{ workout.name }}</h3>
+        <h3 style="margin-bottom: 0px; margin-top: 10px">{{ workout.name }}
+        <button
+                  @click="
+                    () => {
+                      console.log('Workout ID:', workout.id)
+                      deleteWorkout(workout.id)
+                    }
+                  "
+                  class="delete-button"
+                >
+                  -
+                </button></h3>  
         <table class="styled-table">
           <thead>
             <tr>
@@ -23,7 +34,7 @@
                   @click="
                     () => {
                       console.log('Workout ID:', workout.id, 'Exercise ID:', exercise.id)
-                      deleteWorkout(workout.id, exercise.id)
+                      deleteExercise(workout.id, exercise.id)
                     }
                   "
                   class="delete-button"
@@ -71,7 +82,7 @@ const flattenedWorkouts = computed(() => {
   )
 })
 
-const deleteWorkout = async (workoutId, exId) => {
+const deleteExercise = async (workoutId, exId) => {
   if (!workoutId || !exId) {
     console.error('Ungültige Parameter:', workoutId, exId)
     return
@@ -90,6 +101,29 @@ const deleteWorkout = async (workoutId, exId) => {
     }
   } catch (error) {
     console.error('Fehler beim Löschen der Übung:', error)
+    window.location.reload()
+  }
+}
+
+const deleteWorkout = async (workoutId) => {
+  if (!workoutId) {
+    console.error('Ungültige Parameter:', workoutId)
+    return
+  }
+
+  try {
+    const response = await fetch(`http://localhost:8080/workout/${workoutId}`, {
+      method: 'DELETE',
+    })
+    if (response.ok) {
+      console.log(`Workout mit ID ${workoutId} erfolgreich gelöscht`)
+      window.location.reload()
+    } else {
+      console.error('Fehler beim Löschen des Workouts:', await response.text())
+      window.location.reload()
+    }
+  } catch (error) {
+    console.error('Fehler beim Löschen des Workouts:', error)
     window.location.reload()
   }
 }
