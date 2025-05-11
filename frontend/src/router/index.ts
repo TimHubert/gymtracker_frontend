@@ -5,8 +5,10 @@ import Stats from '../views/Stats.vue'
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
-  { path: '/tracker', name: 'Tracker', component: Tracker },
+  { path: '/tracker', name: 'TrackerList', component: Tracker },
   { path: '/stats', name: 'Stats', component: Stats },
+  { path: '/tracker/:id', name: 'TrackerDetail', component: Tracker,
+   },
 ]
 
 const router = createRouter({

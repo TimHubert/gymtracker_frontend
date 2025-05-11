@@ -3,7 +3,7 @@
     <div v-for="(workout, index) in workouts" :key="index" class="row">
       <h3 
         style="margin-bottom: 0px; margin-top: 10px; cursor: pointer;" 
-        @click="handleWorkoutClick(workout.id)"
+        @click="$emit('workout-selected', workout.id)"
       >
         {{ workout.name }} 
         (<span v-for="(exercise, exIndex) in workout.exercise" :key="exIndex">
@@ -49,6 +49,7 @@ const flattenedWorkouts = computed(() => {
 
 const handleWorkoutClick = (workoutId) => {
   console.log(`Workout mit ID ${workoutId} wurde angeklickt`);
+  router.push(`/tracker/${workoutId}`);
 };
 </script>
 

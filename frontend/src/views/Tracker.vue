@@ -1,14 +1,27 @@
 <template>
   <div>
-    <NewTracker />
-    <WorkoutView2 />
-
+    <template v-if="!selectedWorkoutId">
+      <h1>Wähle ein Workout</h1>
+      <WorkoutChoice @workout-selected="handleWorkoutSelected" />
+    </template>
+    <template v-else>
+      <OneWorkout :workoutId="selectedWorkoutId" @back="resetSelection" />
+    </template>
   </div>
 </template>
 
 <script setup>
-import WorkoutView from '../components/WorkoutView.vue'
-import WorkoutView2 from '../components/WorkoutView2.vue'
-import GymTracker from '../components/GymTracker.vue'
-import NewTracker from '@/components/NewTracker.vue'
+import { ref } from 'vue'
+import WorkoutChoice from '@/components/WorkoutChoice.vue'
+import OneWorkout from '@/components/OneWorkout.vue'
+
+const selectedWorkoutId = ref(null)
+
+const handleWorkoutSelected = (workoutId) => {
+  selectedWorkoutId.value = workoutId
+}
+
+const resetSelection = () => {
+  selectedWorkoutId.value = null
+}
 </script>
