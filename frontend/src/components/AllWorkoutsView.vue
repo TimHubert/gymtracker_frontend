@@ -1,58 +1,57 @@
-
 <template>
   <div class="workout-list">
     <h2>Alle Workouts</h2>
     <div v-if="workouts.length">
-      <div v-for="(workout, index) in workouts" :key="index" class="workout-table">
-        <table v-if="workout.exercises?.length > 0" class="table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Set 1</th>
-          <th>Set 2</th>
-          <th>Set 3</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(exercise, index) in workout.exercises" :key="exercise.name">
-          <td>
-            <span>
-              <span class="exercise_name">{{ exercise.name }}</span>
-              ({{ exercise.targetMuscleGroup }})</span
-            ><br />
-          </td>
-          <td>
-            {{
-              workout.weights[index]?.reps[index] +
-                'x' +
-                workout.weights[index]?.weights[index] +
-                'kg' || '-'
-            }}
-          </td>
-          <td>
-            {{
-              workout.weights[index]?.reps[index] +
-                'x' +
-                workout.weights[index]?.weights[index] +
-                'kg' || '-'
-            }}
-          </td>
-          <td>
-            {{
-              workout.weights[index]?.reps[index] +
-                'x' +
-                workout.weights[index]?.weights[index] +
-                'kg' || '-'
-            }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
+      <div v-for="(workout, workoutIndex) in workouts" :key="workoutIndex" class="workout-table">
+        {{ workout.workout.name }} am {{ new Date(workout.date).toLocaleDateString('de-DE') }}
+        <table v-if="workout.workout.exercise?.length > 0" class="table">
+          <thead>
+            <tr>
+              <th>Übung</th>
+              <th>Set 1</th>
+              <th>Set 2</th>
+              <th>Set 3</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(exercise, exIndex) in workout.workout.exercise" :key="exercise.id">
+              <td>
+                <span>
+                  <span class="exercise_name">{{ exercise.name }}</span>
+                  ({{ exercise.targetMuscleGroup }})
+                </span>
+              </td>
+              <td>
+                {{
+                  workout.weights[exIndex]?.reps[0] +
+                    'x' +
+                    workout.weights[exIndex]?.weights[0] +
+                    'kg' || '-'
+                }}
+              </td>
+              <td>
+                {{
+                  workout.weights[exIndex]?.reps[1] +
+                    'x' +
+                    workout.weights[exIndex]?.weights[1] +
+                    'kg' || '-'
+                }}
+              </td>
+              <td>
+                {{
+                  workout.weights[exIndex]?.reps[2] +
+                    'x' +
+                    workout.weights[exIndex]?.weights[2] +
+                    'kg' || '-'
+                }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
     <p v-else class="no-workouts">Keine Workouts gefunden.</p>
   </div>
-  
 </template>
 
 <script setup>
@@ -64,9 +63,8 @@ const loadWorkouts = () => {
   fetch('http://localhost:8080/workoutsWithWeights')
     .then((response) => response.json())
     .then((data) => {
-      console.log('Geladene Workouts:', data)
-      workouts.value = data.filter((workout) => workout.exercises && workout.exercises.length > 0)
-      console.log('Gefilterte Workouts:', workouts.value)
+      console.log('Geladene Workouts:', JSON.stringify(data, null, 2))
+      workouts.value = data
     })
     .catch((error) => console.error('Fehler beim Laden der Workouts:', error))
 }
@@ -75,23 +73,20 @@ onMounted(() => {
   loadWorkouts()
 })
 
-// neue flache Liste für Tabellenanzeige
 const flattenedWorkouts = computed(() => {
   return workouts.value.flatMap((workout) =>
-    workout.exercise.map((ex) => ({
-      workoutId: workout.id,
-      workoutName: workout.name,
-      exercise: exercise,
+    workout.workout.exercise.map((exercise, index) => ({
+      workoutId: workout.workout.id,
+      workoutName: workout.workout.name,
+      exerciseName: exercise.name,
       exId: exercise.id,
-        targetMuscleGroup: exercise.targetMuscleGroup,
-        equipment: exercise.equipment,
-        reps: workout.weights.map((weight) => weight.reps),
-        weights: workout.weights.map((weight) => weight.weights),
+      targetMuscleGroup: exercise.targetMuscleGroup,
+      equipment: exercise.equipment,
+      reps: workout.weights[index]?.reps || [],
+      weights: workout.weights[index]?.weights || [],
     })),
   )
 })
-
-
 </script>
 
 <style scoped>
