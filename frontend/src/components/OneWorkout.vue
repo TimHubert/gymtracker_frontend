@@ -79,8 +79,9 @@
           </tbody>
         </table>
         <button v-if="isEditing" @click="addExercise" class="add">Übung hinzufügen</button>
-        <button v-if="isEditing" @click="saveWorkout" class="submit">Speichern</button>
+        <button v-if="isEditing" @click="saveWorkout" class="submit">Änderungen Übernehmen</button>
         <button v-else @click="toggleEditMode" class="edit">Bearbeiten</button>
+        <button v-if="!isEditing" @click="saveWorkoutWithWeights" class="submit">Speichern</button>
       </div>
       <p v-else>Workout wird geladen...</p>
     </div>
@@ -140,7 +141,7 @@ const addExercise = () => {
   })
 }
 
-const saveWorkout = async () => {
+const saveWorkout = () => {
   try {
     if (!editableWorkout.value.name.trim()) {
       alert('Bitte geben Sie einen Namen für das Workout ein.');
@@ -162,37 +163,15 @@ const saveWorkout = async () => {
       }
     }
 
-    const payload = {
-      workoutReference: {
-        name: editableWorkout.value.name,
-        exercise: editableWorkout.value.exercises.map((exercise) => ({
-          name: exercise.name,
-          equipment: exercise.equipment,
-          targetMuscleGroup: exercise.targetMuscleGroup,
-        })),
-      },
-      weights: editableWorkout.value.exercises.map((exercise) => ({
-        reps: exercise.reps,
-        weights: exercise.weights,
-      })),
-    };
-
-    // Senden der Daten an die API für WorkoutWithWeights
-    await fetch('http://localhost:8080/workoutWithWeights', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    isEditing.value = false;
-    alert('Workout erfolgreich gespeichert!');
+    // Lokale Kopie des Workouts aktualisieren
+    workout.value = JSON.parse(JSON.stringify(editableWorkout.value));
+    isEditing.value = false; 
   } catch (error) {
     console.error('Fehler:', error);
-    alert('Fehler beim Speichern des Workouts');
+    alert('Fehler beim Speichern des Workouts: ' + error.message);
   }
 };
+
 
 const toggleEditMode = () => {
   if (!isEditing.value) {
@@ -207,8 +186,61 @@ watch(() => props.workoutId, loadWorkout)
 onMounted(() => {
   loadWorkout()
 })
+
+
+const saveWorkoutWithWeights = async () => {
+  try {
+    if (!editableWorkout.value.name.trim()) {
+      alert('Bitte geben Sie einen Namen für das Workout ein.');
+      return;
+    }
+
+    for (const exercise of editableWorkout.value.exercises) {
+      if (!exercise.name.trim() || !exercise.equipment.trim() || !exercise.targetMuscleGroup.trim()) {
+        alert('Bitte füllen Sie alle Felder für jede Übung aus.');
+        return;
+      }
+    }
+
+    const currentDate = new Date().toISOString().split('T')[0];
+
+    const payload = {
+      workout: {
+        name: editableWorkout.value.name,
+        exercise: editableWorkout.value.exercises.map(ex => ({
+          name: ex.name,
+          description: "Keine Beschreibung vorhanden",
+          equipment: ex.equipment,
+          targetMuscleGroup: ex.targetMuscleGroup,
+        })),
+      },
+      date: currentDate,
+      weights: editableWorkout.value.exercises.map(ex => ({
+        reps: ex.reps,
+        weights: ex.weights,
+      })),
+    };
+
+    const response = await fetch('http://localhost:8080/OneWorkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP-Fehler! Status: ${response.status}`);
+    }
+
+    alert('Workout erfolgreich gespeichert!');
+  } catch (error) {
+    console.error('Fehler beim Speichern des Workouts:', error);
+    alert('Fehler beim Speichern des Workouts: ' + error.message);
+  }
+};
 </script>
-  
+
   <style>
 
   .edit {

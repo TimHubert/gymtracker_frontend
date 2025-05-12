@@ -26,6 +26,13 @@ const loadWorkouts = () => {
     .then((data) => {
       console.log('Geladene Workouts:', data)
       workouts.value = data.filter((workout) => workout.exercise && workout.exercise.length > 0)
+      const uniqueWorkouts = data.filter(
+        (workout, index, self) =>
+          index === self.findIndex((w) => w.name === workout.name)
+      )
+      workouts.value = uniqueWorkouts.filter(
+        (workout) => workout.exercise && workout.exercise.length > 0
+      )
     })
     .catch((error) => console.error('Fehler beim Laden der Workouts:', error))
 }
