@@ -4,6 +4,7 @@
     <div v-if="workouts.length">
       <div v-for="(workout, workoutIndex) in workouts" :key="workoutIndex" class="workout-table">
         {{ workout.workout.name }} am {{ new Date(workout.date).toLocaleDateString('de-DE') }}
+        <button class="delete-button" @click="deleteWorkout(workout.id)">Löschen</button>
         <table v-if="workout.workout.exercise?.length > 0" class="table">
           <thead>
             <tr>
@@ -73,9 +74,25 @@ onMounted(() => {
   loadWorkouts()
 })
 
+const deleteWorkout = (workoutId) => {
+  console.log('Workout ID zum Löschen:', workoutId) // Debugging
+  fetch(`http://localhost:8080/workoutWithWeights/${workoutId}`, {
+    method: 'DELETE',
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error('Fehler beim Löschen des Workouts')
+      }
+      console.log(`Workout mit ID ${workoutId} gelöscht`)
+      loadWorkouts()
+    })
+    .catch((error) => console.error('Fehler beim Löschen des Workouts:', error))
+}
+
 const flattenedWorkouts = computed(() => {
   return workouts.value.flatMap((workout) =>
     workout.workout.exercise.map((exercise, index) => ({
+      workoutWithWeightsId: workout.workoutWithWeights.id,
       workoutId: workout.workout.id,
       workoutName: workout.workout.name,
       exerciseName: exercise.name,

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <button @click="$emit('back')">Zurück</button>
+    <button v-if="!isEditing" @click="$emit('back')">Zurück</button>
     <div v-if="editableWorkout">
       <h2>
         <template v-if="isEditing">
@@ -20,28 +20,48 @@
           <tr v-for="(exercise, index) in editableWorkout.exercises" :key="exercise.id">
             <td>
               <template v-if="isEditing">
+                <select v-model="exercise.name" style="width: 100%">
+                  <option value="custom">Benutzerdefiniert</option>
+                  <option disabled value="">Übungsname auswählen</option>
+                  <option v-for="option in exerciseOptions" :key="option" :value="option">
+                    {{ option }}
+                  </option>
+                </select>
                 <input
-                  v-model="exercise.name"
+                  v-if="exercise.name === 'custom'"
+                  v-model="exercise.customName"
                   placeholder="Übungsname"
                   required
                   style="width: 100%"
                 />
               </template>
               <template v-else>
-                {{ exercise.name }}
+                {{ exercise.customName || exercise.name }}
               </template>
             </td>
             <td>
               <template v-if="isEditing">
+                <select v-model="exercise.equipment" style="width: 100%">
+                  <option disabled value="">Equipment auswählen</option>
+                  <option value="custom">Benutzerdefiniert</option>
+                  <option
+                    v-for="option in equipmentOptions.filter((opt) => opt !== 'custom')"
+                    :key="option"
+                    :value="option"
+                  >
+                    {{ option }}
+                  </option>
+                </select>
                 <input
-                  v-model="exercise.equipment"
+                  v-if="exercise.equipment === 'custom'"
+                  v-model="exercise.customEquipment"
                   placeholder="Equipment"
                   required
                   style="width: 100%"
                 />
               </template>
               <template v-else>
-                {{ exercise.equipment }}
+                {{ exercise.customEquipment || exercise.equipment }}
               </template>
             </td>
             <td>
@@ -88,7 +108,9 @@
           </tr>
         </tbody>
       </table>
+      <button v-if="isEditing" @click="toggleEditMode" class="submit">Zurück</button>
       <button v-if="isEditing" @click="addExercise" class="add">Übung hinzufügen</button>
+      <button v-if="isEditing" @click="removeExercise" class="add">Übung entfernen</button>
       <button v-if="isEditing" @click="saveWorkout" class="submit">Änderungen Übernehmen</button>
       <button v-else @click="toggleEditMode" class="edit">Bearbeiten</button>
       <button v-if="!isEditing" @click="saveWorkoutWithWeights" class="submit">Speichern</button>
@@ -107,6 +129,42 @@ const props = defineProps({
     required: true,
   },
 })
+
+const workouts = ref([])
+const exerciseOptions = ref([])
+const equipmentOptions = ref([])
+const flattenedWorkouts = ref([])
+
+const loadOptions = async () => {
+  try {
+    const response = await fetch('http://localhost:8080/workoutsWithWeights')
+    const data = await response.json()
+    console.log('Geladene Workouts:', JSON.stringify(data, null, 2))
+    workouts.value = data
+
+    flattenedWorkouts.value = data.flatMap((workout) =>
+      workout.workout.exercise.map((exercise, index) => {
+        const weightEntry = workout.weights[index] || {}
+        return {
+          workoutWithWeightsId: workout.id,
+          workoutId: workout.workout.id,
+          workoutName: workout.workout.name,
+          exerciseName: exercise.name,
+          exId: exercise.id,
+          targetMuscleGroup: exercise.targetMuscleGroup,
+          equipment: exercise.equipment,
+          reps: weightEntry.reps || [],
+          weights: weightEntry.weights || [],
+        }
+      }),
+    )
+
+    exerciseOptions.value = [...new Set(flattenedWorkouts.value.map((item) => item.exerciseName))]
+    equipmentOptions.value = [...new Set(flattenedWorkouts.value.map((item) => item.equipment))]
+  } catch (error) {
+    console.error('Fehler beim Laden der Workouts:', error)
+  }
+}
 
 const emit = defineEmits(['back'])
 const workout = ref(null)
@@ -156,6 +214,16 @@ const addExercise = () => {
   })
 }
 
+const removeExercise = () => {
+  editableWorkout.value.exercises.pop({
+    name: '',
+    equipment: '',
+    targetMuscleGroup: '',
+    reps: [0],
+    weights: [0],
+  })
+}
+
 const saveWorkout = () => {
   try {
     if (!editableWorkout.value.name.trim()) {
@@ -178,7 +246,6 @@ const saveWorkout = () => {
       }
     }
 
-    // Lokale Kopie des Workouts aktualisieren
     workout.value = JSON.parse(JSON.stringify(editableWorkout.value))
     isEditing.value = false
   } catch (error) {
@@ -188,8 +255,12 @@ const saveWorkout = () => {
 }
 
 const toggleEditMode = () => {
-  if (!isEditing.value) {
-    editableWorkout.value = JSON.parse(JSON.stringify(workout.value))
+  if (isEditing.value) {
+    workout.value = JSON.parse(JSON.stringify(editableWorkout.value))
+  } else {
+    if (!editableWorkout.value) {
+      editableWorkout.value = JSON.parse(JSON.stringify(workout.value))
+    }
   }
   isEditing.value = !isEditing.value
 }
@@ -198,6 +269,7 @@ watch(() => props.workoutId, loadWorkout)
 
 onMounted(() => {
   loadWorkout()
+  loadOptions()
 })
 
 const saveWorkoutWithWeights = async () => {
@@ -216,6 +288,25 @@ const saveWorkoutWithWeights = async () => {
         alert('Bitte füllen Sie alle Felder für jede Übung aus.')
         return
       }
+
+      for (let i = 0; i < exercise.reps.length; i++) {
+        const rep = exercise.reps[i]
+        const weight = exercise.weights[i]
+
+        if (isNaN(rep) || rep.toString().includes(',')) {
+          alert(
+            `Ungültiger Wert für Reps in Übung "${exercise.name}". Bitte geben Sie eine Zahl mit Punkt ein.`,
+          )
+          return
+        }
+
+        if (isNaN(weight) || weight.toString().includes(',')) {
+          alert(
+            `Ungültiger Wert für Gewicht in Übung "${exercise.name}". Bitte geben Sie eine Zahl mit Punkt ein.`,
+          )
+          return
+        }
+      }
     }
 
     const currentDate = new Date().toISOString().split('T')[0]
@@ -225,35 +316,47 @@ const saveWorkoutWithWeights = async () => {
         id: editableWorkout.value.id || null, // ID hinzufügen, falls vorhanden
         name: editableWorkout.value.name,
         exercise: editableWorkout.value.exercises.map((ex) => ({
-          name: ex.name,
+          name: ex.customName || ex.name,
           description: 'Keine Beschreibung vorhanden',
-          equipment: ex.equipment,
+          equipment: ex.customEquipment || ex.equipment,
           targetMuscleGroup: ex.targetMuscleGroup,
         })),
       },
       date: currentDate,
       weights: editableWorkout.value.exercises.map((ex) => ({
-        reps: ex.reps,
-        weights: ex.weights,
+        reps: ex.reps ?? 0,
+        weights: ex.weights ?? 0,
       })),
     }
 
-    console.log('Editable Workout ID:', editableWorkout.value.id)
-    console.log('Editable Workout Date:', workout.value.date)
+    const currentWorkoutWithWeights = flattenedWorkouts.value.find(
+      (workout) => workout.workoutId === editableWorkout.value.id,
+    )
 
     const method = editableWorkout.value.id && workout.value.date === currentDate ? 'PUT' : 'POST'
     const url =
       editableWorkout.value.id && workout.value.date === currentDate
-        ? `http://localhost:8080/OneWorkout/${editableWorkout.value.id}`
+        ? `http://localhost:8080/OneWorkout/${currentWorkoutWithWeights.workoutWithWeightsId}`
         : 'http://localhost:8080/OneWorkout'
 
-    const response = await fetch(url, {
+    let response = await fetch(url, {
       method: method,
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
     })
+
+    if (!response.ok && response.status === 404 && method === 'PUT') {
+      console.warn('PUT fehlgeschlagen, versuche POST...')
+      response = await fetch('http://localhost:8080/OneWorkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      })
+    }
 
     if (!response.ok) {
       throw new Error(`HTTP-Fehler! Status: ${response.status}`)
