@@ -333,9 +333,12 @@ const saveWorkoutWithWeights = async () => {
       (workout) => workout.workoutId === editableWorkout.value.id,
     )
 
-    const method = editableWorkout.value.id && workout.value.date === currentDate ? 'PUT' : 'POST'
+    const method =
+      editableWorkout.value.id && currentWorkoutWithWeights && workout.value.date === currentDate
+        ? 'PUT'
+        : 'POST'
     const url =
-      editableWorkout.value.id && workout.value.date === currentDate
+      method === 'PUT'
         ? `http://localhost:8080/OneWorkout/${currentWorkoutWithWeights.workoutWithWeightsId}`
         : 'http://localhost:8080/OneWorkout'
 
@@ -367,6 +370,8 @@ const saveWorkoutWithWeights = async () => {
     console.error('Fehler beim Speichern des Workouts:', error)
     alert('Fehler beim Speichern des Workouts: ' + error.message)
   }
+
+  loadOptions()
 }
 </script>
 
