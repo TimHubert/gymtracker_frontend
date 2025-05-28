@@ -201,10 +201,12 @@ async function submitWorkout() {
 .exercise select {
   width: 100%;
   margin-right: 0.5rem;
+  margin-left: 0.5rem;
   margin-top: 0.2rem;
+  margin-bottom: 0.5rem;
   padding: 0.5rem;
-  border-radius: 5px;
-  border: 0px solid #ff7b00;
+  border-radius: 10px;
+  border: 0px solid rgba(0, 132, 255, 0.745);
   background-color: #474747;
   color: white;
   outline: none;
@@ -218,8 +220,8 @@ async function submitWorkout() {
   background-color: #ff4d4d;
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  padding: 0.6rem 0.95rem;
+  border-radius: 30px;
   cursor: pointer;
   outline: none;
 }
@@ -228,32 +230,32 @@ async function submitWorkout() {
 }
 
 .add {
-  background-color: #4caf50;
+  background-color: rgb(0, 110, 255);
   margin-top: 0.4rem;
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  padding: 0.6rem 0.85rem;
+  border-radius: 30px;
   cursor: pointer;
   outline: none;
 }
 .add:hover {
-  background-color: #45a049;
+  background-color: rgb(0, 65, 150);
 }
 
 .submit {
-  background-color: #ed6b00;
+  background-color: rgb(0, 110, 255);
   margin-top: 0.4rem;
   margin-left: 0.5rem;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 4px;
+  border-radius: 30px;
   cursor: pointer;
   outline: none;
 }
 .submit:hover {
-  background-color: #da720b;
+  background-color: rgb(0, 84, 194);
 }
 .input-line {
   padding: 0.5rem 0;
@@ -267,7 +269,7 @@ async function submitWorkout() {
 }
 
 .input-line:focus {
-  border-bottom: 2px solid #ff7b00;
+  border-bottom: 2px solid rgb(0, 110, 255);
 }
 
 .table {

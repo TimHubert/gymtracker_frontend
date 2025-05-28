@@ -1,44 +1,38 @@
 <template>
   <div id="app">
-    <div class="logo-container">
-      <img src="@/assets/logo.png" alt="Logo" class="logo" />
-    </div>
     <header class="header">
       <nav class="nav-container">
-        <router-link to="/">Home</router-link>
-        <router-link to="/tracker">Tracker</router-link>
-        <router-link to="/stats">Stats</router-link>
+        <div class="logo-wrapper">
+          <img src="@/assets/logo.png" alt="Logo" class="logo" />
+        </div>
+        <div class="links">
+          <router-link to="/">Home</router-link>
+          <router-link to="/tracker">Tracker</router-link>
+          <router-link to="/stats">Stats</router-link>
+        </div>
       </nav>
     </header>
-    <div class="container-wrapper">
-      <div class="container">
-        <main class="main-content">
-          <router-view />
-        </main>
-      </div>
-    </div>
+    <main class="main-content">
+      <router-view />
+    </main>
   </div>
 </template>
 
 <style>
-.logo-container {
-  position: fixed;
-  top: 20px;
-  left: 0;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  z-index: 1001;
+.logo {
+  height: 50px;
+  width: auto;
 }
 
-.logo {
-  height: 60px;
-  width: auto;
+.logo-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
 }
 
 .header {
   position: fixed;
-  padding-top: 80px;
   top: 0;
   left: 0;
   width: 100%;
@@ -47,12 +41,32 @@
 
 .nav-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 0.3rem;
-  padding: 1rem;
-  width: 40%;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  max-width: cover;
   margin: 0 auto;
+  background-image:
+    linear-gradient(rgba(12, 12, 12, 0.8), rgba(19, 19, 19, 0.8)),
+    url('@/assets/header-background.jpg');
+  background-size: cover;
+  background-position: center;
+  backdrop-filter: blur(10px);
+  background-color: transparent;
+  border-radius: 1px 0 10px 10px;
+  box-shadow: 0 0 20px 10px rgba(0, 0, 0, 0.5);
+  position: relative;
+  z-index: 1000;
+  opacity: 1;
+}
+
+.links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
 }
 
 nav a {
@@ -61,55 +75,25 @@ nav a {
   text-decoration: none;
   font-weight: bold;
   padding: 0.5rem 1rem;
-  border-radius: 4px;
-  width: 100%;
+  border-radius: 30px;
+  width: 8rem;
   transition: background-color 0.3s;
   background-color: rgba(255, 255, 255, 0.1);
 }
 
 nav a:hover {
-  background-color: rgb(255, 111, 0);
+  background-color: rgb(0, 110, 255);
 }
 
 nav a.router-link-exact-active {
-  background-color: rgb(255, 111, 0);
-}
-
-.container-wrapper {
-  position: fixed;
-  top: 150px;
-  left: 10%;
-  right: 10%;
-  width: auto;
-  height: calc(100vh);
-  padding-bottom: 40px;
-  overflow: auto;
-  box-shadow: 0 0 20px rgba(13, 13, 13, 0.9);
-  border-radius: 30px;
-  z-index: 900;
-}
-
-.container {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  width: 80%;
-  max-width: 1300px;
-  min-height: 150vh;
-  height: auto;
-  margin-left: auto;
-  margin-right: auto;
-  padding: 0;
-  box-sizing: border-box;
-  text-align: left;
+  background-color: rgb(0, 110, 255);
 }
 
 .main-content {
-  width: 100%;
-  height: 100%;
+  width: 80%;
+  max-width: 1300px;
+  margin: 150px auto 30px auto;
   padding: 2rem;
-  margin: 0 auto;
-  margin-bottom: 30px;
   border-radius: 10px;
   overflow-y: visible;
 }

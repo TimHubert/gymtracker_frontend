@@ -1,17 +1,33 @@
 <template>
   <div class="workout-list">
     <h2>Alle Workouts</h2>
-    <div v-if="workouts.length">
-      <div v-for="(workout, workoutIndex) in workouts" :key="workoutIndex" class="workout-table">
+    <div class="filter-section">
+      <label for="date-filter">Filter nach Datum:</label>
+      <input id="date-filter" type="date" v-model="selectedDate" @change="filterWorkoutsByDate" />
+    </div>
+    <div v-if="filteredWorkouts.length">
+      <div
+        v-for="(workout, workoutIndex) in filteredWorkouts"
+        :key="workoutIndex"
+        class="table"
+        style="margin-bottom: 0.1rem"
+      >
         {{ workout.workout.name }} am {{ new Date(workout.date).toLocaleDateString('de-DE') }}
-        <button class="delete-button" @click="deleteWorkout(workout.id)">Löschen</button>
+        <button
+          class="delete-button"
+          @click="deleteWorkout(workout.id)"
+          style="margin-bottom: 0.2rem"
+        >
+          Löschen
+        </button>
         <router-link
           :to="{ name: 'EditWorkoutWithWeights', params: { id: workout.id } }"
           class="edit-button"
+          style="margin-bottom: 0.2rem"
         >
           Bearbeiten
         </router-link>
-        <table v-if="workout.workout.exercise?.length > 0" class="table">
+        <table v-if="workout.workout.exercise?.length > 0" class="styled-table">
           <thead>
             <tr>
               <th>Übung</th>
@@ -65,6 +81,8 @@
 import { ref, onMounted, computed } from 'vue'
 
 const workouts = ref([])
+const filteredWorkouts = ref([])
+const selectedDate = ref('')
 
 const loadWorkouts = () => {
   fetch('http://localhost:8080/workoutsWithWeights')
@@ -72,8 +90,21 @@ const loadWorkouts = () => {
     .then((data) => {
       console.log('Geladene Workouts:', JSON.stringify(data, null, 2))
       workouts.value = data
+      filteredWorkouts.value = data
     })
     .catch((error) => console.error('Fehler beim Laden der Workouts:', error))
+}
+
+const filterWorkoutsByDate = () => {
+  if (selectedDate.value) {
+    filteredWorkouts.value = workouts.value.filter(
+      (workout) =>
+        new Date(workout.date).toLocaleDateString('de-DE') ===
+        new Date(selectedDate.value).toLocaleDateString('de-DE'),
+    )
+  } else {
+    filteredWorkouts.value = workouts.value
+  }
 }
 
 onMounted(() => {
@@ -81,7 +112,7 @@ onMounted(() => {
 })
 
 const deleteWorkout = (workoutId) => {
-  console.log('Workout ID zum Löschen:', workoutId) // Debugging
+  console.log('Workout ID zum Löschen:', workoutId)
   fetch(`http://localhost:8080/workoutWithWeights/${workoutId}`, {
     method: 'DELETE',
   })
@@ -117,17 +148,32 @@ const flattenedWorkouts = computed(() => {
   margin-top: 2rem;
 }
 
+.filter-section {
+  margin-bottom: 1rem;
+}
+
+.filter-section label {
+  margin-right: 0.5rem;
+}
+
+.filter-section input {
+  padding: 0.5rem;
+  border-radius: 30px;
+  border: none;
+  background-color: rgb(0, 110, 255);
+}
+
 .styled-table {
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 1rem;
   border-collapse: separate;
   overflow: hidden;
+  border-radius: 20px;
 }
 
 .styled-table th,
 .styled-table td {
-  border: 0px solid #ff7b00;
   padding: 8px;
   text-align: left;
   color: white;
@@ -136,7 +182,8 @@ const flattenedWorkouts = computed(() => {
 
 .styled-table th {
   background-color: #1e1e1e;
-  color: #ff7b00;
+  color: rgb(0, 110, 255);
+  text-align: center;
 }
 
 .styled-table tr:nth-child(even) {
@@ -154,6 +201,21 @@ const flattenedWorkouts = computed(() => {
   border-top-right-radius: 12px;
 }
 
+.styled-table th:first-child {
+  border-top-left-radius: 20px;
+}
+
+.styled-table th:last-child {
+  border-top-right-radius: 20px;
+}
+
+.styled-table tr:last-child td:last-child {
+  border-bottom-right-radius: 20px;
+}
+.styled-table tr:last-child td:first-child {
+  border-bottom-left-radius: 20px;
+}
+
 .no-workouts {
   color: #888;
   margin-top: 1rem;
@@ -165,7 +227,7 @@ const flattenedWorkouts = computed(() => {
   border: none;
   padding: 5px 10px;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 30px;
 }
 
 .delete-button:hover {
@@ -180,10 +242,18 @@ const flattenedWorkouts = computed(() => {
   border: none;
   padding: 5px 10px;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 30px;
 }
 
-.delete-button:hover {
-  background-color: #2d33a1;
+.edit-button:hover {
+  background-color: rgb(0, 110, 255);
+}
+
+.table {
+  margin-bottom: 1rem;
+  padding: 0.9rem 0.5rem 0.01px 0.5rem;
+  border-radius: 30px;
+  background-color: none;
+  text-align: center;
 }
 </style>

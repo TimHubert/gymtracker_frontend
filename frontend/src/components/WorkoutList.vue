@@ -151,7 +151,7 @@ const deleteWorkout = async (workoutId) => {
 
 .styled-table th,
 .styled-table td {
-  border: 0px solid #ff7b00;
+  border: 0px solid rgb(0, 110, 255);
   padding: 8px;
   text-align: left;
   color: white;
@@ -160,7 +160,7 @@ const deleteWorkout = async (workoutId) => {
 
 .styled-table th {
   background-color: #1e1e1e;
-  color: #ff7b00;
+  color: rgb(0, 110, 255);
 }
 
 .styled-table tr:nth-child(even) {
@@ -171,11 +171,18 @@ const deleteWorkout = async (workoutId) => {
   background-color: #1e1e1e;
 }
 .styled-table th:first-child {
-  border-top-left-radius: 12px;
+  border-top-left-radius: 20px;
 }
 
 .styled-table th:last-child {
-  border-top-right-radius: 12px;
+  border-top-right-radius: 20px;
+}
+
+.styled-table tr:last-child td:last-child {
+  border-bottom-right-radius: 20px;
+}
+.styled-table tr:last-child td:first-child {
+  border-bottom-left-radius: 20px;
 }
 
 .no-workouts {
@@ -189,7 +196,7 @@ const deleteWorkout = async (workoutId) => {
   border: none;
   padding: 5px 10px;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 30px;
 }
 
 .delete-button:hover {

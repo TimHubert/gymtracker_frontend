@@ -129,7 +129,7 @@ const workoutWithWeights = ref(null)
 const isEditing = ref(false)
 const exerciseOptions = ref([])
 const equipmentOptions = ref([])
-const muscleGroups = ['Brust', 'Lat', 'Trizeps', 'Bizeps', 'Schulter', 'Beine'] // Muskelgruppen hinzugefügt
+const muscleGroups = ['Brust', 'Lat', 'Trizeps', 'Bizeps', 'Schulter', 'Beine']
 
 const loadOptions = async () => {
   try {
