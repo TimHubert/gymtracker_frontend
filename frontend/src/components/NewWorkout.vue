@@ -6,46 +6,45 @@
     <div class="column" v-if="zeigeÜbungen">
       <div v-for="(übung, index) in übungen" :key="index" class="exercise">
         <div style="display: flex; align-items: center; width: 100%">
-          Neue Übung?
-          <input
-            @click="übung.newName = !übung.newName"
-            type="checkbox"
-            v-model="übung.newName"
-            style="margin-left: 0.3rem"
-          />
-          <div v-if="übung.newName" style="flex: 1; margin-left: 0.5rem">
-            <input v-model="übung.name" placeholder="Übung" required style="width: 100%" />
-          </div>
-          <div v-else style="flex: 1; margin-left: 0.5rem">
+          Name
+          <div style="flex: 1; margin-left: 0.5rem">
             <select v-model="übung.name" id="übungname" style="width: 100%">
-              <option disabled value="">Name</option>
+              <option value="custom">Benutzerdefiniert</option>
+              <option disabled value="">Übung auswählen</option>
               <option v-for="exercise in uniqueExerciseNames" :key="exercise" :value="exercise">
                 {{ exercise }}
               </option>
             </select>
+            <input
+              v-if="übung.name === 'custom'"
+              v-model="übung.customName"
+              placeholder="Benutzerdefinierter Übungsname"
+              required
+              style="width: 100%; margin-top: 0.5rem"
+            />
           </div>
         </div>
         <div style="display: flex; align-items: center; width: 100%">
-          Neues Equipment?
-          <input
-            @click="übung.newEquipment = !übung.newEquipment"
-            type="checkbox"
-            style="margin-left: 0.3rem"
-            v-model="übung.newEquipment"
-          />
-          <div v-if="übung.newEquipment" style="flex: 1; margin-left: 0.5rem">
-            <input v-model="übung.gerät" placeholder="Gerät" required style="width: 100%" />
-          </div>
-          <div v-else style="flex: 1; margin-left: 0.5rem">
+          Equipment
+          <div style="flex: 1; margin-left: 0.5rem">
             <select v-model="übung.gerät" id="übungequipment" style="width: 100%">
-              <option disabled value="">Gerät</option>
+              <option value="custom">Benutzerdefiniert</option>
+              <option disabled value="">Equipment auswählen</option>
               <option v-for="exercise in uniqueEquipmentNames" :key="exercise" :value="exercise">
                 {{ exercise }}
               </option>
             </select>
+            <input
+              v-if="übung.gerät === 'custom'"
+              v-model="übung.customEquipment"
+              placeholder="Benutzerdefiniertes Equipment"
+              required
+              style="width: 100%; margin-top: 0.5rem"
+            />
           </div>
         </div>
         <div style="display: flex; align-items: center">
+          Muskelgruppe
           <select v-model="übung.muskelgruppe" id="muskelgruppe">
             <option disabled value="">Muskelgruppe</option>
             <option v-for="gruppe in übung.muskelgruppen" :key="gruppe" :value="gruppe">
@@ -84,8 +83,9 @@ const zeigeÜbungen = ref(false)
 const übungen = ref([
   {
     name: '',
+    customName: '',
     gerät: '',
-    newName: false,
+    customEquipment: '',
     muskelgruppe: '',
     muskelgruppen: ['Brust', 'Lat', 'Trizeps', 'Bizeps', 'Schulter', 'Beine'],
   },
@@ -118,7 +118,9 @@ function toggleÜbungen() {
 function addÜbung() {
   übungen.value.push({
     name: '',
+    customName: '',
     gerät: '',
+    customEquipment: '',
     muskelgruppe: '',
     muskelgruppen: ['Brust', 'Lat', 'Trizeps', 'Bizeps', 'Schulter', 'Beine'],
   })
@@ -141,20 +143,24 @@ async function submitWorkout() {
     }
 
     for (const übung of übungen.value) {
-      if (!übung.name.trim() || !übung.gerät.trim() || !übung.muskelgruppe.trim()) {
+      const finalName = übung.name === 'custom' ? übung.customName : übung.name
+      const finalEquipment = übung.gerät === 'custom' ? übung.customEquipment : übung.gerät
+
+      if (!finalName.trim() || !finalEquipment.trim() || !übung.muskelgruppe.trim()) {
         alert('Bitte füllen Sie alle Felder für die Übungen aus.')
         return
       }
     }
 
-    workout.value.exercises = übungen.value
+    workout.value.exercises = übungen.value.map((übung) => ({
+      name: übung.name === 'custom' ? übung.customName : übung.name,
+      equipment: übung.gerät === 'custom' ? übung.customEquipment : übung.gerät,
+      targetMuscleGroup: übung.muskelgruppe,
+    }))
+
     const payload = {
       name: workout.value.name,
-      exercise: workout.value.exercises.map((exercise) => ({
-        name: exercise.name,
-        equipment: exercise.gerät,
-        targetMuscleGroup: exercise.muskelgruppe,
-      })),
+      exercise: workout.value.exercises,
     }
 
     console.log('Gesendete Daten:', JSON.stringify(payload))
