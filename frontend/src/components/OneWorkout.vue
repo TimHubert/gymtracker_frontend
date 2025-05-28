@@ -121,7 +121,6 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
 const props = defineProps({
   workoutId: {
@@ -130,16 +129,21 @@ const props = defineProps({
   },
 })
 
+const emit = defineEmits(['back'])
 const workouts = ref([])
 const exerciseOptions = ref([])
 const equipmentOptions = ref([])
 const flattenedWorkouts = ref([])
+const workout = ref(null)
+const editableWorkout = ref(null)
+const isEditing = ref(false)
+
+const muscleGroups = ['Brust', 'Lat', 'Trizeps', 'Bizeps', 'Schulter', 'Beine']
 
 const loadOptions = async () => {
   try {
     const response = await fetch('http://localhost:8080/workoutsWithWeights')
     const data = await response.json()
-    console.log('Geladene Workouts:', JSON.stringify(data, null, 2))
     workouts.value = data
 
     flattenedWorkouts.value = data.flatMap((workout) =>
@@ -167,43 +171,40 @@ const loadOptions = async () => {
   }
 }
 
-const emit = defineEmits(['back'])
-const workout = ref(null)
-const editableWorkout = ref(null)
-const isEditing = ref(false)
-
-const muscleGroups = ['Brust', 'Lat', 'Trizeps', 'Bizeps', 'Schulter', 'Beine']
-
-const loadWorkout = () => {
-  fetch(`http://localhost:8080/workout/${props.workoutId}`)
-    .then((response) => response.json())
-    .then((data) => {
-      const originalWorkout = {
-        id: data.id,
-        name: data.name,
-        date: data.date || new Date().toISOString().split('T')[0],
-        exercises:
-          data.exercise.map((ex) => ({
-            ...ex,
-            reps: ex.reps || [0, 0, 0],
-            weights: ex.weights || [0, 0, 0],
-          })) || [],
-      }
-      workout.value = originalWorkout
-      editableWorkout.value = JSON.parse(JSON.stringify(originalWorkout))
-    })
-
-    .catch((error) => console.error('Fehler beim Laden des Workouts:', error))
+const loadWorkout = async () => {
+  try {
+    const response = await fetch(`http://localhost:8080/workout/${props.workoutId}`)
+    const data = await response.json()
+    const originalWorkout = {
+      id: data.id,
+      name: data.name,
+      date: data.date || new Date().toISOString().split('T')[0],
+      exercises:
+        data.exercise.map((ex) => ({
+          ...ex,
+          reps: ex.reps || [0, 0, 0],
+          weights: ex.weights || [0, 0, 0],
+        })) || [],
+    }
+    workout.value = originalWorkout
+    editableWorkout.value = JSON.parse(JSON.stringify(originalWorkout))
+  } catch (error) {
+    console.error('Fehler beim Laden des Workouts:', error)
+  }
 }
 
 const addRep = (exerciseIndex) => {
-  editableWorkout.value.exercises[exerciseIndex].reps.push(0)
-  editableWorkout.value.exercises[exerciseIndex].weights.push(0)
+  const exercise = editableWorkout.value.exercises[exerciseIndex]
+  exercise.reps.push(0)
+  exercise.weights.push(0)
 }
 
 const removeRep = (exerciseIndex) => {
-  editableWorkout.value.exercises[exerciseIndex].reps.pop()
-  editableWorkout.value.exercises[exerciseIndex].weights.pop()
+  const exercise = editableWorkout.value.exercises[exerciseIndex]
+  if (exercise.reps.length > 1) {
+    exercise.reps.pop()
+    exercise.weights.pop()
+  }
 }
 
 const addExercise = () => {
@@ -217,13 +218,7 @@ const addExercise = () => {
 }
 
 const removeExercise = () => {
-  editableWorkout.value.exercises.pop({
-    name: '',
-    equipment: '',
-    targetMuscleGroup: '',
-    reps: [0],
-    weights: [0],
-  })
+  editableWorkout.value.exercises.pop()
 }
 
 const saveWorkout = () => {
@@ -234,16 +229,12 @@ const saveWorkout = () => {
     }
 
     for (const exercise of editableWorkout.value.exercises) {
-      if (!exercise.name.trim()) {
-        alert('Bitte geben Sie einen Namen für jede Übung ein.')
-        return
-      }
-      if (!exercise.equipment.trim()) {
-        alert('Bitte geben Sie ein Equipment für jede Übung ein.')
-        return
-      }
-      if (!exercise.targetMuscleGroup.trim()) {
-        alert('Bitte wählen Sie eine Muskelgruppe für jede Übung aus.')
+      if (
+        !exercise.name.trim() ||
+        !exercise.equipment.trim() ||
+        !exercise.targetMuscleGroup.trim()
+      ) {
+        alert('Bitte füllen Sie alle Felder für jede Übung aus.')
         return
       }
     }
@@ -257,22 +248,11 @@ const saveWorkout = () => {
 }
 
 const toggleEditMode = () => {
-  if (isEditing.value) {
-    workout.value = JSON.parse(JSON.stringify(editableWorkout.value))
-  } else {
-    if (!editableWorkout.value) {
-      editableWorkout.value = JSON.parse(JSON.stringify(workout.value))
-    }
+  if (!isEditing.value && editableWorkout.value) {
+    editableWorkout.value = JSON.parse(JSON.stringify(workout.value))
   }
   isEditing.value = !isEditing.value
 }
-
-watch(() => props.workoutId, loadWorkout)
-
-onMounted(() => {
-  loadWorkout()
-  loadOptions()
-})
 
 const saveWorkoutWithWeights = async () => {
   try {
@@ -296,26 +276,20 @@ const saveWorkoutWithWeights = async () => {
         const weight = exercise.weights[i]
 
         if (isNaN(rep) || rep.toString().includes(',')) {
-          alert(
-            `Ungültiger Wert für Reps in Übung "${exercise.name}". Bitte geben Sie eine Zahl mit Punkt ein.`,
-          )
+          alert(`Ungültiger Wert für Reps in Übung "${exercise.name}".`)
           return
         }
 
         if (isNaN(weight) || weight.toString().includes(',')) {
-          alert(
-            `Ungültiger Wert für Gewicht in Übung "${exercise.name}". Bitte geben Sie eine Zahl mit Punkt ein.`,
-          )
+          alert(`Ungültiger Wert für Gewicht in Übung "${exercise.name}".`)
           return
         }
       }
     }
 
-    const currentDate = new Date().toISOString().split('T')[0]
-
     const payload = {
       workout: {
-        id: editableWorkout.value.id || null, // ID hinzufügen, falls vorhanden
+        id: editableWorkout.value.id || null,
         name: editableWorkout.value.name,
         exercise: editableWorkout.value.exercises.map((ex) => ({
           name: ex.customName || ex.name,
@@ -324,35 +298,34 @@ const saveWorkoutWithWeights = async () => {
           targetMuscleGroup: ex.targetMuscleGroup,
         })),
       },
-      date: editableWorkout.value.date || currentDate,
+      date: editableWorkout.value.date || new Date().toISOString().split('T')[0],
       weights: editableWorkout.value.exercises.map((ex) => ({
-        reps: ex.reps ?? 0,
-        weights: ex.weights ?? 0,
+        reps: ex.reps,
+        weights: ex.weights,
       })),
     }
 
-    const url = 'http://localhost:8080/OneWorkout'
-
-    const response = await fetch(url, {
+    const response = await fetch('http://localhost:8080/OneWorkout', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
 
-    if (!response.ok) {
-      throw new Error(`HTTP-Fehler! Status: ${response.status}`)
-    }
+    if (!response.ok) throw new Error(`HTTP-Fehler! Status: ${response.status}`)
+
     alert('Workout erfolgreich gespeichert')
-    console.log('Workout erfolgreich gespeichert:', await response.json())
+    loadOptions()
   } catch (error) {
     console.error('Fehler beim Speichern des Workouts:', error)
     alert('Fehler beim Speichern des Workouts: ' + error.message)
   }
-
-  loadOptions()
 }
+
+watch(() => props.workoutId, loadWorkout)
+onMounted(() => {
+  loadWorkout()
+  loadOptions()
+})
 </script>
 
 <style>

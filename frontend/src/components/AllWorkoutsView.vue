@@ -5,11 +5,9 @@
       <div v-for="(workout, workoutIndex) in workouts" :key="workoutIndex" class="workout-table">
         {{ workout.workout.name }} am {{ new Date(workout.date).toLocaleDateString('de-DE') }}
         <button class="delete-button" @click="deleteWorkout(workout.id)">Löschen</button>
-        <button>Hallo</button>
         <router-link
           :to="{ name: 'EditWorkoutWithWeights', params: { id: workout.id } }"
           class="edit-button"
-          style="border: 1px solid red; color: white; background-color: blue"
         >
           Bearbeiten
         </router-link>
@@ -172,5 +170,20 @@ const flattenedWorkouts = computed(() => {
 
 .delete-button:hover {
   background-color: #ff1a1a;
+}
+
+.edit-button {
+  margin-left: 3px;
+  background-color: #4d56ff;
+  color: white;
+  font-size: smaller;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.delete-button:hover {
+  background-color: #2d33a1;
 }
 </style>
