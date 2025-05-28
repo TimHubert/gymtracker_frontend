@@ -155,6 +155,7 @@ const loadOptions = async () => {
           equipment: exercise.equipment,
           reps: weightEntry.reps || [],
           weights: weightEntry.weights || [],
+          date: workout.date || new Date().toISOString().split('T')[0],
         }
       }),
     )
@@ -191,6 +192,7 @@ const loadWorkout = () => {
       workout.value = originalWorkout
       editableWorkout.value = JSON.parse(JSON.stringify(originalWorkout))
     })
+
     .catch((error) => console.error('Fehler beim Laden des Workouts:', error))
 }
 
@@ -322,44 +324,22 @@ const saveWorkoutWithWeights = async () => {
           targetMuscleGroup: ex.targetMuscleGroup,
         })),
       },
-      date: currentDate,
+      date: editableWorkout.value.date || currentDate,
       weights: editableWorkout.value.exercises.map((ex) => ({
         reps: ex.reps ?? 0,
         weights: ex.weights ?? 0,
       })),
     }
 
-    const currentWorkoutWithWeights = flattenedWorkouts.value.find(
-      (workout) => workout.workoutId === editableWorkout.value.id,
-    )
+    const url = 'http://localhost:8080/OneWorkout'
 
-    const method =
-      editableWorkout.value.id && currentWorkoutWithWeights && workout.value.date === currentDate
-        ? 'PUT'
-        : 'POST'
-    const url =
-      method === 'PUT'
-        ? `http://localhost:8080/OneWorkout/${currentWorkoutWithWeights.workoutWithWeightsId}`
-        : 'http://localhost:8080/OneWorkout'
-
-    let response = await fetch(url, {
-      method: method,
+    const response = await fetch(url, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
     })
-
-    if (!response.ok && response.status === 404 && method === 'PUT') {
-      console.warn('PUT fehlgeschlagen, versuche POST...')
-      response = await fetch('http://localhost:8080/OneWorkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      })
-    }
 
     if (!response.ok) {
       throw new Error(`HTTP-Fehler! Status: ${response.status}`)

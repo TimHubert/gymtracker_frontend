@@ -3,18 +3,20 @@
     <h2>Alle Workouts</h2>
     <div v-if="workouts.length">
       <div v-for="(workout, index) in workouts" :key="index" class="workout-table">
-        <h3 style="margin-bottom: 0px; margin-top: 10px">{{ workout.name }}
-        <button
-                  @click="
-                    () => {
-                      console.log('Workout ID:', workout.id)
-                      deleteWorkout(workout.id)
-                    }
-                  "
-                  class="delete-button"
-                >
-                  -
-                </button></h3>  
+        <h3 style="margin-bottom: 0px; margin-top: 10px">
+          {{ workout.name }}
+          <button
+            @click="
+              () => {
+                console.log('Workout ID:', workout.id)
+                deleteWorkout(workout.id)
+              }
+            "
+            class="delete-button"
+          >
+            -
+          </button>
+        </h3>
         <table class="styled-table">
           <thead>
             <tr>
@@ -62,11 +64,10 @@ const loadWorkouts = () => {
     .then((data) => {
       console.log('Geladene Workouts:', data)
       const uniqueWorkouts = data.filter(
-        (workout, index, self) =>
-          index === self.findIndex((w) => w.name === workout.name)
+        (workout, index, self) => index === self.findIndex((w) => w.name === workout.name),
       )
       workouts.value = uniqueWorkouts.filter(
-        (workout) => workout.exercise && workout.exercise.length > 0
+        (workout) => workout.exercise && workout.exercise.length > 0,
       )
     })
     .catch((error) => console.error('Fehler beim Laden der Workouts:', error))

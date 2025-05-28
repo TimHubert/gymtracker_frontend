@@ -5,6 +5,14 @@
       <div v-for="(workout, workoutIndex) in workouts" :key="workoutIndex" class="workout-table">
         {{ workout.workout.name }} am {{ new Date(workout.date).toLocaleDateString('de-DE') }}
         <button class="delete-button" @click="deleteWorkout(workout.id)">Löschen</button>
+        <button>Hallo</button>
+        <router-link
+          :to="{ name: 'EditWorkoutWithWeights', params: { id: workout.id } }"
+          class="edit-button"
+          style="border: 1px solid red; color: white; background-color: blue"
+        >
+          Bearbeiten
+        </router-link>
         <table v-if="workout.workout.exercise?.length > 0" class="table">
           <thead>
             <tr>
