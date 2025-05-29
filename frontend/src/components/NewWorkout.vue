@@ -161,6 +161,7 @@ async function submitWorkout() {
     const payload = {
       name: workout.value.name,
       exercise: workout.value.exercises,
+      show: true,
     }
 
     console.log('Gesendete Daten:', JSON.stringify(payload))

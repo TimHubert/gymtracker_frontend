@@ -300,7 +300,7 @@ const saveWorkoutWithWeights = async () => {
 
     const payload = {
       workout: {
-        id: editableWorkout.value.id || null,
+        id: null, // Immer null setzen, um ein neues Workout zu erstellen
         name: editableWorkout.value.name,
         exercise: editableWorkout.value.exercises.map((ex) => ({
           name: ex.customName || ex.name,
@@ -310,6 +310,7 @@ const saveWorkoutWithWeights = async () => {
         })),
       },
       date: editableWorkout.value.date || new Date().toISOString().split('T')[0],
+      show: false,
       weights: editableWorkout.value.exercises.map((ex) => ({
         reps: ex.reps,
         weights: ex.weights,

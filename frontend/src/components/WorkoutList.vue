@@ -66,17 +66,13 @@ import { ref, onMounted, computed } from 'vue'
 
 const workouts = ref([])
 
+// Filterung der Workouts basierend auf "show"
 const loadWorkouts = () => {
   fetch('http://localhost:8080/workouts')
     .then((response) => response.json())
     .then((data) => {
       console.log('Geladene Workouts:', data)
-      const uniqueWorkouts = data.filter(
-        (workout, index, self) => index === self.findIndex((w) => w.name === workout.name),
-      )
-      workouts.value = uniqueWorkouts.filter(
-        (workout) => workout.exercise && workout.exercise.length > 0,
-      )
+      workouts.value = data.filter((workout) => workout.show) // Nur Workouts mit show: true anzeigen
     })
     .catch((error) => console.error('Fehler beim Laden der Workouts:', error))
 }
@@ -128,18 +124,21 @@ const deleteWorkout = async (workoutId) => {
 
   try {
     const response = await fetch(`http://localhost:8080/workout/${workoutId}`, {
-      method: 'DELETE',
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ show: false }),
     })
     if (response.ok) {
-      console.log(`Workout mit ID ${workoutId} erfolgreich gelöscht`)
-      window.location.reload()
+      console.log(`Workout mit ID ${workoutId} erfolgreich ausgeblendet`)
+      // Workouts neu laden, um die Anzeige zu aktualisieren
+      loadWorkouts()
     } else {
-      console.error('Fehler beim Löschen des Workouts:', await response.text())
-      window.location.reload()
+      console.error('Fehler beim Ausblenden des Workouts:', await response.text())
     }
   } catch (error) {
-    console.error('Fehler beim Löschen des Workouts:', error)
-    window.location.reload()
+    console.error('Fehler beim Ausblenden des Workouts:', error)
   }
 }
 </script>
