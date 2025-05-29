@@ -12,21 +12,24 @@
         class="table"
         style="margin-bottom: 0.1rem"
       >
-        {{ workout.workout.name }} am {{ new Date(workout.date).toLocaleDateString('de-DE') }}
-        <button
-          class="delete-button"
-          @click="deleteWorkout(workout.id)"
-          style="margin-bottom: 0.2rem"
-        >
-          Löschen
-        </button>
-        <router-link
-          :to="{ name: 'EditWorkoutWithWeights', params: { id: workout.id } }"
-          class="edit-button"
-          style="margin-bottom: 0.2rem"
-        >
-          Bearbeiten
-        </router-link>
+        <h3>
+          {{ workout.workout.name }} am {{ new Date(workout.date).toLocaleDateString('de-DE') }}
+
+          <button
+            class="delete-button"
+            @click="deleteWorkout(workout.id)"
+            style="margin-bottom: 0.2rem"
+          >
+            <img src="@/assets/delete.svg" alt="Löschen" style="width: 15px" />
+          </button>
+          <router-link
+            :to="{ name: 'EditWorkoutWithWeights', params: { id: workout.id } }"
+            class="edit-button"
+            style="margin-bottom: 0.2rem"
+          >
+            <img src="@/assets/edit.svg" alt="Löschen" style="width: 15px" />
+          </router-link>
+        </h3>
         <table v-if="workout.workout.exercise?.length > 0" class="styled-table">
           <thead>
             <tr>

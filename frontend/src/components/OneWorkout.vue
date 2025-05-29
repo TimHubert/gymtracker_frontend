@@ -1,106 +1,107 @@
 <template>
-  <div>
-    <button v-if="!isEditing" @click="$emit('back')">Zurück</button>
-    <div v-if="editableWorkout">
+  <div class="workout-container">
+    <div v-if="editableWorkout" class="workout-content">
       <h2>
+        <button v-if="!isEditing" @click="$emit('back')" class="button back-button"><</button>
         <template v-if="isEditing">
           <input
             v-model="editableWorkout.name"
             placeholder="Workout-Name"
             required
-            style="width: 100%; font-size: 1.5rem; margin-bottom: 1rem"
+            class="input workout-name-input"
           />
         </template>
         <template v-else>
           {{ editableWorkout.name }}
         </template>
       </h2>
-      <table>
+      <table class="workout-table">
         <tbody>
           <tr v-for="(exercise, index) in editableWorkout.exercises" :key="exercise.id">
             <td>
-              <template v-if="isEditing">
-                <select v-model="exercise.name" style="width: 100%">
-                  <option value="custom">Benutzerdefiniert</option>
-                  <option disabled value="">Übungsname auswählen</option>
-                  <option v-for="option in exerciseOptions" :key="option" :value="option">
-                    {{ option }}
-                  </option>
-                </select>
-                <input
-                  v-if="exercise.name === 'custom'"
-                  v-model="exercise.customName"
-                  placeholder="Übungsname"
-                  required
-                  style="width: 100%"
-                />
-              </template>
-              <template v-else>
-                {{ exercise.customName || exercise.name }}
-              </template>
+              <div>
+                <template v-if="isEditing">
+                  <select v-model="exercise.name" class="input select-input">
+                    <option value="custom">Benutzerdefiniert</option>
+                    <option disabled value="">Übungsname auswählen</option>
+                    <option v-for="option in exerciseOptions" :key="option" :value="option">
+                      {{ option }}
+                    </option>
+                  </select>
+                  <input
+                    v-if="exercise.name === 'custom'"
+                    v-model="exercise.customName"
+                    placeholder="Übungsname"
+                    required
+                    class="input custom-input"
+                  />
+                </template>
+                <template v-else>
+                  {{ exercise.customName || exercise.name }}
+                </template>
+              </div>
+              <div>
+                <template v-if="isEditing">
+                  <select v-model="exercise.equipment" class="input select-input">
+                    <option disabled value="">Equipment auswählen</option>
+                    <option value="custom">Benutzerdefiniert</option>
+                    <option
+                      v-for="option in equipmentOptions.filter((opt) => opt !== 'custom')"
+                      :key="option"
+                      :value="option"
+                    >
+                      {{ option }}
+                    </option>
+                  </select>
+                  <input
+                    v-if="exercise.equipment === 'custom'"
+                    v-model="exercise.customEquipment"
+                    placeholder="Equipment"
+                    required
+                    class="input custom-input"
+                  />
+                </template>
+                <template v-else>
+                  {{ exercise.customEquipment || exercise.equipment }}
+                </template>
+              </div>
+              <div>
+                <template v-if="isEditing">
+                  <select v-model="exercise.targetMuscleGroup" class="input select-input">
+                    <option disabled value="">Muskelgruppe</option>
+                    <option v-for="group in muscleGroups" :key="group" :value="group">
+                      {{ group }}
+                    </option>
+                  </select>
+                </template>
+                <template v-else>
+                  {{ exercise.targetMuscleGroup }}
+                </template>
+              </div>
             </td>
             <td>
-              <template v-if="isEditing">
-                <select v-model="exercise.equipment" style="width: 100%">
-                  <option disabled value="">Equipment auswählen</option>
-                  <option value="custom">Benutzerdefiniert</option>
-                  <option
-                    v-for="option in equipmentOptions.filter((opt) => opt !== 'custom')"
-                    :key="option"
-                    :value="option"
-                  >
-                    {{ option }}
-                  </option>
-                </select>
-                <input
-                  v-if="exercise.equipment === 'custom'"
-                  v-model="exercise.customEquipment"
-                  placeholder="Equipment"
-                  required
-                  style="width: 100%"
-                />
-              </template>
-              <template v-else>
-                {{ exercise.customEquipment || exercise.equipment }}
-              </template>
-            </td>
-            <td>
-              <template v-if="isEditing">
-                <select v-model="exercise.targetMuscleGroup" style="width: 100%">
-                  <option disabled value="">Muskelgruppe</option>
-                  <option v-for="group in muscleGroups" :key="group" :value="group">
-                    {{ group }}
-                  </option>
-                </select>
-              </template>
-              <template v-else>
-                {{ exercise.targetMuscleGroup }}
-              </template>
-            </td>
-            <td>
-              <div
-                v-for="(rep, repIndex) in exercise.reps"
-                :key="repIndex"
-                style="display: flex; gap: 10px; align-items: center"
-              >
+              <div v-for="(rep, repIndex) in exercise.reps" :key="repIndex" class="rep-container">
                 <input
                   v-model="exercise.reps[repIndex]"
                   placeholder="Reps"
                   required
-                  style="width: 100%"
+                  class="input"
                 />
+                x
                 <input
                   v-model="exercise.weights[repIndex]"
                   placeholder="Weight"
                   required
-                  style="width: 100%"
+                  class="input"
                 />
+                kg
               </div>
-              <button v-if="isEditing" @click="addRep(index)">+</button>
+              <button v-if="isEditing" @click="addRep(index)" class="button add-button">+</button>
               <button
                 v-if="isEditing"
                 @click="removeRep(index)"
                 :disabled="exercise.reps.length <= 1"
+                class="button remove-button"
               >
                 -
               </button>
@@ -108,12 +109,22 @@
           </tr>
         </tbody>
       </table>
-      <button v-if="isEditing" @click="toggleEditMode" class="submit">Zurück</button>
-      <button v-if="isEditing" @click="addExercise" class="add">Übung hinzufügen</button>
-      <button v-if="isEditing" @click="removeExercise" class="add">Übung entfernen</button>
-      <button v-if="isEditing" @click="saveWorkout" class="submit">Änderungen Übernehmen</button>
-      <button v-else @click="toggleEditMode" class="edit">Bearbeiten</button>
-      <button v-if="!isEditing" @click="saveWorkoutWithWeights" class="submit">Speichern</button>
+      <div class="action-buttons">
+        <button v-if="isEditing" @click="toggleEditMode" class="button">Zurück</button>
+        <button v-if="isEditing" @click="addExercise" class="button add-button">
+          Übung hinzufügen
+        </button>
+        <button v-if="isEditing" @click="removeExercise" class="button remove-button">
+          Übung entfernen
+        </button>
+        <button v-if="isEditing" @click="saveWorkout" class="button submit-button">
+          Änderungen Übernehmen
+        </button>
+        <button v-else @click="toggleEditMode" class="button edit-button">Bearbeiten</button>
+        <button v-if="!isEditing" @click="saveWorkoutWithWeights" class="button submit-button">
+          Speichern
+        </button>
+      </div>
     </div>
     <p v-else>Workout wird geladen...</p>
   </div>
@@ -329,7 +340,73 @@ onMounted(() => {
 </script>
 
 <style>
-.edit {
+.workout-container {
+  padding: 2rem;
+  background-color: rgb(26, 26, 26);
+  border: 1px solid rgb(0, 110, 255);
+  color: rgb(0, 110, 255);
+  border-radius: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.workout-content {
+  margin-top: 1rem;
+}
+
+.workout-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.workout-table td {
+  padding: 0.5rem;
+  border: none;
+}
+
+.input {
+  width: 50px;
+  text-align: center;
+  padding: 0.5rem;
+  border: 0px solid #000000;
+  background-color: #111111;
+  color: white;
+  border-radius: 30px;
+  margin-bottom: 3px;
+  outline: none;
+}
+
+.select-input {
+  background-color: #ffffff;
+  width: 100%;
+  color: black;
+  text-align: left;
+  margin-bottom: 3px;
+}
+
+.workout-name-input {
+  font-size: 1.5rem;
+  width: 100%;
+}
+
+.custom-input {
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem;
+  border: 0px solid #000000;
+  background-color: #ffffff;
+  color: black;
+  border-radius: 30px;
+  margin-bottom: 3px;
+}
+
+.rep-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.button {
   background-color: #007bff;
   color: white;
   border: none;
@@ -338,7 +415,56 @@ onMounted(() => {
   cursor: pointer;
   outline: none;
 }
-.edit:hover {
+
+.button:hover {
   background-color: #0056b3;
+}
+
+.add-button {
+  background-color: #28a745;
+}
+
+.add-button:hover {
+  background-color: #218838;
+}
+
+.remove-button {
+  background-color: #dc3545;
+}
+
+.remove-button:hover {
+  background-color: #c82333;
+}
+
+.submit-button {
+  background-color: #17a2b8;
+}
+
+.submit-button:hover {
+  background-color: #138496;
+}
+
+.edit-button {
+  background-color: white;
+  color: rgb(0, 110, 255);
+  border-radius: 30px;
+}
+
+.edit-button:hover {
+  background-color: rgb(200, 200, 200);
+  color: rgb(0, 110, 255);
+}
+
+.back-button {
+  border-radius: 30px;
+  background-color: rgb(0, 110, 255);
+  margin-bottom: 1rem;
+  margin-right: 1rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 1rem;
 }
 </style>

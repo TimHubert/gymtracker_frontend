@@ -3,6 +3,7 @@
     <template v-if="!selectedWorkoutId">
       <h1>Wähle ein Workout</h1>
       <WorkoutChoice @workout-selected="handleWorkoutSelected" />
+      <br />
       <NewWorkout @workout-selected="handleWorkoutSelected" />
     </template>
     <template v-else>
@@ -15,7 +16,7 @@
 import { ref } from 'vue'
 import WorkoutChoice from '@/components/WorkoutChoice.vue'
 import OneWorkout from '@/components/OneWorkout.vue'
-import NewWorkout  from '@/components/NewWorkout.vue'
+import NewWorkout from '@/components/NewWorkout.vue'
 
 const selectedWorkoutId = ref(null)
 

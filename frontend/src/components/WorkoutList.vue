@@ -3,7 +3,7 @@
     <h2>Alle Workouts</h2>
     <div v-if="workouts.length">
       <div v-for="(workout, index) in workouts" :key="index" class="workout-table">
-        <h3 style="margin-bottom: 0px; margin-top: 10px">
+        <h3 style="margin-bottom: 0px; margin-top: 10px; text-align: center">
           {{ workout.name }}
           <button
             @click="
@@ -14,7 +14,7 @@
             "
             class="delete-button"
           >
-            -
+            <img src="@/assets/delete.svg" alt="Löschen" style="width: 15px" />
           </button>
         </h3>
         <table class="styled-table">
@@ -23,7 +23,7 @@
               <th>Übung</th>
               <th>Gerät</th>
               <th>Muskelgruppe</th>
-              <th>Aktionen</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -39,9 +39,17 @@
                       deleteExercise(workout.id, exercise.id)
                     }
                   "
-                  class="delete-button"
+                  style="
+                    background-color: transparent;
+                    width: 100%;
+                    height: 100%;
+                    border: none;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                  "
                 >
-                  Löschen
+                  <img src="@/assets/delete.svg" alt="Löschen" style="width: 15px" />
                 </button>
               </td>
             </tr>
@@ -185,6 +193,13 @@ const deleteWorkout = async (workoutId) => {
   border-bottom-left-radius: 20px;
 }
 
+.styled-table td:last-child {
+  background-color: #ff4d4d;
+}
+
+.styled-table td:last-child:hover {
+  background-color: #c93535;
+}
 .no-workouts {
   color: #888;
   margin-top: 1rem;
@@ -194,12 +209,13 @@ const deleteWorkout = async (workoutId) => {
   background-color: #ff4d4d;
   color: white;
   border: none;
-  padding: 5px 10px;
+  padding: 4px 9px;
   cursor: pointer;
   border-radius: 30px;
+  align-self: center;
 }
 
 .delete-button:hover {
-  background-color: #ff1a1a;
+  background-color: #971d1d;
 }
 </style>
