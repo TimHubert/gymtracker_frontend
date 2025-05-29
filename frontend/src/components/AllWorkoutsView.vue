@@ -51,12 +51,19 @@
                 </span>
               </td>
               <td v-for="setIndex in maxSets(workout.weights)" :key="'data-' + setIndex">
-                {{
-                  workout.weights[exIndex]?.reps[setIndex - 1] +
+                <template
+                  v-if="
+                    workout.weights[exIndex]?.reps[setIndex - 1] !== undefined &&
+                    workout.weights[exIndex]?.weights[setIndex - 1] !== undefined
+                  "
+                >
+                  {{
+                    workout.weights[exIndex].reps[setIndex - 1] +
                     'x' +
-                    workout.weights[exIndex]?.weights[setIndex - 1] +
-                    'kg' || '-'
-                }}
+                    workout.weights[exIndex].weights[setIndex - 1] +
+                    'kg'
+                  }}
+                </template>
               </td>
             </tr>
           </tbody>

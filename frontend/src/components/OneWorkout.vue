@@ -1,25 +1,25 @@
 <template>
   <div class="workout-container">
-    <div v-if="editableWorkout" class="workout-content">
+    <div v-if="workout" class="workout-content">
       <h2>
         <button v-if="!isEditing" @click="$emit('back')" class="button back-button">
           <img src="@/assets/back.svg" alt="Löschen" style="width: 15px" />
         </button>
         <template v-if="isEditing">
           <input
-            v-model="editableWorkout.name"
+            v-model="workout.name"
             placeholder="Workout-Name"
             required
             class="input workout-name-input"
           />
         </template>
         <template v-else>
-          {{ editableWorkout.name }}
+          {{ workout.name }}
         </template>
       </h2>
       <table class="workout-table">
         <tbody>
-          <tr v-for="(exercise, index) in editableWorkout.exercises" :key="exercise.id">
+          <tr v-for="(exercise, index) in workout.exercises" :key="exercise.id">
             <td>
               <div>
                 <template v-if="isEditing">
@@ -114,7 +114,7 @@
         </tbody>
       </table>
       <div class="action-buttons">
-        <button v-if="isEditing" @click="toggleEditMode" class="button">
+        <button v-if="isEditing" @click="cancelEdit" class="button">
           <img src="@/assets/back.svg" alt="Löschen" style="width: 15px" />
         </button>
         <button v-if="isEditing" @click="addExercise" class="button add-button">
@@ -138,6 +138,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
+import { RouterLink, useRouter } from 'vue-router'
 
 const props = defineProps({
   workoutId: {
@@ -152,8 +153,9 @@ const exerciseOptions = ref([])
 const equipmentOptions = ref([])
 const flattenedWorkouts = ref([])
 const workout = ref(null)
-const editableWorkout = ref(null)
 const isEditing = ref(false)
+const originalWorkout = ref(null)
+const router = useRouter()
 
 const muscleGroups = ['Brust', 'Lat', 'Trizeps', 'Bizeps', 'Schulter', 'Beine']
 
@@ -192,7 +194,7 @@ const loadWorkout = async () => {
   try {
     const response = await fetch(`http://localhost:8080/workout/${props.workoutId}`)
     const data = await response.json()
-    const originalWorkout = {
+    const loadedWorkout = {
       id: data.id,
       name: data.name,
       date: data.date || new Date().toISOString().split('T')[0],
@@ -203,21 +205,21 @@ const loadWorkout = async () => {
           weights: ex.weights || [0, 0, 0],
         })) || [],
     }
-    workout.value = originalWorkout
-    editableWorkout.value = JSON.parse(JSON.stringify(originalWorkout))
+    workout.value = JSON.parse(JSON.stringify(loadedWorkout))
+    originalWorkout.value = JSON.parse(JSON.stringify(loadedWorkout))
   } catch (error) {
     console.error('Fehler beim Laden des Workouts:', error)
   }
 }
 
 const addRep = (exerciseIndex) => {
-  const exercise = editableWorkout.value.exercises[exerciseIndex]
+  const exercise = workout.value.exercises[exerciseIndex]
   exercise.reps.push(0)
   exercise.weights.push(0)
 }
 
 const removeRep = (exerciseIndex) => {
-  const exercise = editableWorkout.value.exercises[exerciseIndex]
+  const exercise = workout.value.exercises[exerciseIndex]
   if (exercise.reps.length > 1) {
     exercise.reps.pop()
     exercise.weights.pop()
@@ -225,7 +227,7 @@ const removeRep = (exerciseIndex) => {
 }
 
 const addExercise = () => {
-  editableWorkout.value.exercises.push({
+  workout.value.exercises.push({
     name: '',
     equipment: '',
     targetMuscleGroup: '',
@@ -235,17 +237,17 @@ const addExercise = () => {
 }
 
 const removeExercise = () => {
-  editableWorkout.value.exercises.pop()
+  workout.value.exercises.pop()
 }
 
 const saveWorkout = () => {
   try {
-    if (!editableWorkout.value.name.trim()) {
+    if (!workout.value.name.trim()) {
       alert('Bitte geben Sie einen Namen für das Workout ein.')
       return
     }
 
-    for (const exercise of editableWorkout.value.exercises) {
+    for (const exercise of workout.value.exercises) {
       if (
         !exercise.name.trim() ||
         !exercise.equipment.trim() ||
@@ -254,9 +256,19 @@ const saveWorkout = () => {
         alert('Bitte füllen Sie alle Felder für jede Übung aus.')
         return
       }
+      if (exercise.name === 'custom' && (!exercise.customName || !exercise.customName.trim())) {
+        alert('Bitte geben Sie einen benutzerdefinierten Übungsnamen ein.')
+        return
+      }
+      if (
+        exercise.equipment === 'custom' &&
+        (!exercise.customEquipment || !exercise.customEquipment.trim())
+      ) {
+        alert('Bitte geben Sie ein benutzerdefiniertes Equipment ein.')
+        return
+      }
     }
 
-    workout.value = JSON.parse(JSON.stringify(editableWorkout.value))
     isEditing.value = false
   } catch (error) {
     console.error('Fehler:', error)
@@ -266,27 +278,45 @@ const saveWorkout = () => {
 
 const toggleEditMode = () => {
   if (isEditing.value) {
-    loadWorkout()
-  } else if (editableWorkout.value) {
-    editableWorkout.value = JSON.parse(JSON.stringify(workout.value))
+    workout.value = JSON.parse(JSON.stringify(originalWorkout.value))
+  } else {
+    originalWorkout.value = JSON.parse(JSON.stringify(workout.value))
   }
   isEditing.value = !isEditing.value
 }
 
+const cancelEdit = () => {
+  workout.value = JSON.parse(JSON.stringify(originalWorkout.value))
+  isEditing.value = false
+}
+
 const saveWorkoutWithWeights = async () => {
   try {
-    if (!editableWorkout.value.name.trim()) {
+    if (!workout.value.name.trim()) {
       alert('Bitte geben Sie einen Namen für das Workout ein.')
       return
     }
 
-    for (const exercise of editableWorkout.value.exercises) {
+    for (const exercise of workout.value.exercises) {
       if (
         !exercise.name.trim() ||
         !exercise.equipment.trim() ||
         !exercise.targetMuscleGroup.trim()
       ) {
         alert('Bitte füllen Sie alle Felder für jede Übung aus.')
+        return
+      }
+
+      if (exercise.name === 'custom' && (!exercise.customName || !exercise.customName.trim())) {
+        alert('Bitte geben Sie einen benutzerdefinierten Übungsnamen ein.')
+        return
+      }
+
+      if (
+        exercise.equipment === 'custom' &&
+        (!exercise.customEquipment || !exercise.customEquipment.trim())
+      ) {
+        alert('Bitte geben Sie ein benutzerdefiniertes Equipment ein.')
         return
       }
 
@@ -308,18 +338,18 @@ const saveWorkoutWithWeights = async () => {
 
     const payload = {
       workout: {
-        id: null, // Immer null setzen, um ein neues Workout zu erstellen
-        name: editableWorkout.value.name,
-        exercise: editableWorkout.value.exercises.map((ex) => ({
+        id: null,
+        name: workout.value.name,
+        exercise: workout.value.exercises.map((ex) => ({
           name: ex.customName || ex.name,
           description: 'Keine Beschreibung vorhanden',
           equipment: ex.customEquipment || ex.equipment,
           targetMuscleGroup: ex.targetMuscleGroup,
         })),
       },
-      date: editableWorkout.value.date || new Date().toISOString().split('T')[0],
+      date: workout.value.date || new Date().toISOString().split('T')[0],
       show: false,
-      weights: editableWorkout.value.exercises.map((ex) => ({
+      weights: workout.value.exercises.map((ex) => ({
         reps: ex.reps,
         weights: ex.weights,
       })),
@@ -335,6 +365,7 @@ const saveWorkoutWithWeights = async () => {
 
     alert('Workout erfolgreich gespeichert')
     loadOptions()
+    emit('back')
   } catch (error) {
     console.error('Fehler beim Speichern des Workouts:', error)
     alert('Fehler beim Speichern des Workouts: ' + error.message)

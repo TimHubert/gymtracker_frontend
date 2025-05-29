@@ -92,18 +92,26 @@
                 class="rep-container"
               >
                 <input
+                  v-if="isEditing"
                   v-model="workoutWithWeights.weights[index].reps[repIndex]"
                   placeholder="Reps"
                   required
                   class="input"
+                  type="number"
+                  min="0"
                 />
+                <span v-else>{{ workoutWithWeights.weights[index].reps[repIndex] }}</span>
                 x
                 <input
+                  v-if="isEditing"
                   v-model="workoutWithWeights.weights[index].weights[repIndex]"
                   placeholder="Weight"
                   required
                   class="input"
+                  type="number"
+                  min="0"
                 />
+                <span v-else>{{ workoutWithWeights.weights[index].weights[repIndex] }}</span>
                 kg
               </div>
               <div class="button-container">
@@ -122,7 +130,7 @@
         </tbody>
       </table>
       <div class="action-buttons">
-        <button v-if="isEditing" @click="toggleEditMode" class="button">
+        <button v-if="isEditing" @click="cancelEdit" class="button">
           <img src="@/assets/back.svg" alt="Zurück" style="width: 15px" />
         </button>
         <button v-if="isEditing" @click="addExercise" class="button add-button">
@@ -131,10 +139,13 @@
         <button v-if="isEditing" @click="removeExercise" class="button remove-button">
           Übung entfernen
         </button>
-        <button v-if="isEditing" @click="saveWorkout" class="button submit-button">
+        <button v-if="isEditing" @click="toggleEditMode" class="button submit-button">
           Änderungen Übernehmen
         </button>
         <button v-else @click="toggleEditMode" class="button edit-button">Bearbeiten</button>
+        <button v-if="!isEditing" @click="saveWorkout" class="button submit-button">
+          Speichern
+        </button>
       </div>
     </div>
     <p v-else>Workout-Daten werden geladen...</p>
@@ -153,6 +164,7 @@ const isEditing = ref(false)
 const exerciseOptions = ref([])
 const equipmentOptions = ref([])
 const muscleGroups = ['Brust', 'Lat', 'Trizeps', 'Bizeps', 'Schulter', 'Beine']
+const originalWorkout = ref(null)
 
 const loadOptions = async () => {
   try {
@@ -174,7 +186,56 @@ const loadOptions = async () => {
 }
 
 const toggleEditMode = () => {
+  if (isEditing.value) {
+    if (!workoutWithWeights.value.workout.name.trim()) {
+      alert('Bitte geben Sie einen Namen für das Workout ein.')
+      return
+    }
+    for (const [i, exercise] of workoutWithWeights.value.workout.exercise.entries()) {
+      if (
+        !exercise.name.trim() ||
+        !exercise.equipment.trim() ||
+        !exercise.targetMuscleGroup.trim()
+      ) {
+        alert('Bitte füllen Sie alle Felder für jede Übung aus.')
+        return
+      }
+      if (exercise.name === 'custom' && (!exercise.customName || !exercise.customName.trim())) {
+        alert('Bitte geben Sie einen benutzerdefinierten Übungsnamen ein.')
+        return
+      }
+      if (
+        exercise.equipment === 'custom' &&
+        (!exercise.customEquipment || !exercise.customEquipment.trim())
+      ) {
+        alert('Bitte geben Sie ein benutzerdefiniertes Equipment ein.')
+        return
+      }
+      const repsArr = workoutWithWeights.value.weights[i]?.reps || []
+      const weightsArr = workoutWithWeights.value.weights[i]?.weights || []
+      for (let j = 0; j < repsArr.length; j++) {
+        const rep = repsArr[j]
+        const weight = weightsArr[j]
+        if (isNaN(rep) || rep.toString().includes(',')) {
+          alert(`Ungültiger Wert für Reps in Übung "${exercise.customName || exercise.name}".`)
+          return
+        }
+        if (isNaN(weight) || weight.toString().includes(',')) {
+          alert(`Ungültiger Wert für Gewicht in Übung "${exercise.customName || exercise.name}".`)
+          return
+        }
+      }
+    }
+    originalWorkout.value = JSON.parse(JSON.stringify(workoutWithWeights.value))
+  } else {
+    originalWorkout.value = JSON.parse(JSON.stringify(workoutWithWeights.value))
+  }
   isEditing.value = !isEditing.value
+}
+
+const cancelEdit = () => {
+  workoutWithWeights.value = JSON.parse(JSON.stringify(originalWorkout.value))
+  isEditing.value = false
 }
 
 const addRep = (exerciseIndex) => {
@@ -212,6 +273,48 @@ const removeExercise = () => {
 
 const saveWorkout = async () => {
   try {
+    if (!workoutWithWeights.value.workout.name.trim()) {
+      alert('Bitte geben Sie einen Namen für das Workout ein.')
+      return
+    }
+
+    for (const [i, exercise] of workoutWithWeights.value.workout.exercise.entries()) {
+      if (
+        !exercise.name.trim() ||
+        !exercise.equipment.trim() ||
+        !exercise.targetMuscleGroup.trim()
+      ) {
+        alert('Bitte füllen Sie alle Felder für jede Übung aus.')
+        return
+      }
+      if (exercise.name === 'custom' && (!exercise.customName || !exercise.customName.trim())) {
+        alert('Bitte geben Sie einen benutzerdefinierten Übungsnamen ein.')
+        return
+      }
+      if (
+        exercise.equipment === 'custom' &&
+        (!exercise.customEquipment || !exercise.customEquipment.trim())
+      ) {
+        alert('Bitte geben Sie ein benutzerdefiniertes Equipment ein.')
+        return
+      }
+      // Reps/Weights validieren
+      const repsArr = workoutWithWeights.value.weights[i]?.reps || []
+      const weightsArr = workoutWithWeights.value.weights[i]?.weights || []
+      for (let j = 0; j < repsArr.length; j++) {
+        const rep = repsArr[j]
+        const weight = weightsArr[j]
+        if (isNaN(rep) || rep.toString().includes(',')) {
+          alert(`Ungültiger Wert für Reps in Übung "${exercise.customName || exercise.name}".`)
+          return
+        }
+        if (isNaN(weight) || weight.toString().includes(',')) {
+          alert(`Ungültiger Wert für Gewicht in Übung "${exercise.customName || exercise.name}".`)
+          return
+        }
+      }
+    }
+
     const apiUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL
     const payload = {
       ...workoutWithWeights.value,
@@ -233,7 +336,9 @@ const saveWorkout = async () => {
     })
     if (response.ok) {
       alert('Workout erfolgreich gespeichert')
-      toggleEditMode()
+      isEditing.value = false
+      // Original aktualisieren
+      originalWorkout.value = JSON.parse(JSON.stringify(workoutWithWeights.value))
     } else {
       console.error('Fehler beim Speichern des Workouts:', await response.text())
     }
@@ -248,6 +353,7 @@ onMounted(() => {
     .then((response) => response.json())
     .then((data) => {
       workoutWithWeights.value = data
+      originalWorkout.value = JSON.parse(JSON.stringify(data))
     })
     .catch((error) => console.error('Fehler beim Laden des Workouts:', error))
 

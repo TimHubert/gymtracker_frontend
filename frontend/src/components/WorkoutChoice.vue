@@ -28,14 +28,13 @@ const loadWorkouts = () => {
   fetch('http://localhost:8080/workouts')
     .then((response) => response.json())
     .then((data) => {
-      console.log('Geladene Workouts:', data)
-      workouts.value = data.filter((workout) => workout.exercise && workout.exercise.length > 0)
-      const uniqueWorkouts = data.filter(
+      const filtered = data.filter(
+        (workout) => workout.show === true && workout.exercise && workout.exercise.length > 0,
+      )
+      const uniqueWorkouts = filtered.filter(
         (workout, index, self) => index === self.findIndex((w) => w.name === workout.name),
       )
-      workouts.value = uniqueWorkouts.filter(
-        (workout) => workout.exercise && workout.exercise.length > 0,
-      )
+      workouts.value = uniqueWorkouts
     })
     .catch((error) => console.error('Fehler beim Laden der Workouts:', error))
 }
