@@ -1,121 +1,144 @@
 <template>
-  <div class="edit-workout" v-if="workoutWithWeights?.workout">
-    <div v-if="!isEditing">
-      <router-link :to="{ name: 'Stats' }" class="edit-button"> Zurück </router-link>
-    </div>
-    <h2>
-      Workout bearbeiten:
-      <template v-if="isEditing">
-        <input
-          v-model="workoutWithWeights.workout.name"
-          placeholder="Workout-Name"
-          required
-          style="width: 100%; font-size: 1.5rem; margin-bottom: 1rem"
-        />
-      </template>
-      <template v-else>
-        {{ workoutWithWeights.workout.name }}
-      </template>
-    </h2>
-    <table>
-      <tbody>
-        <tr v-for="(exercise, index) in workoutWithWeights.workout.exercise" :key="exercise.id">
-          <td>
-            <template v-if="isEditing">
-              <select v-model="exercise.name" style="width: 100%">
-                <option value="custom">Benutzerdefiniert</option>
-                <option disabled value="">Übungsname auswählen</option>
-                <option v-for="option in exerciseOptions" :key="option" :value="option">
-                  {{ option }}
-                </option>
-              </select>
-              <input
-                v-if="exercise.name === 'custom'"
-                v-model="exercise.customName"
-                placeholder="Übungsname"
-                required
-                style="width: 100%"
-              />
-            </template>
-            <template v-else>
-              {{ exercise.customName || exercise.name }}
-            </template>
-          </td>
-          <td>
-            <template v-if="isEditing">
-              <select v-model="exercise.equipment" style="width: 100%">
-                <option value="custom">Benutzerdefiniert</option>
-                <option disabled value="">Equipment auswählen</option>
-                <option
-                  v-for="option in equipmentOptions.filter((opt) => opt !== 'custom')"
-                  :key="option"
-                  :value="option"
+  <div class="workout-container">
+    <div v-if="workoutWithWeights?.workout" class="workout-content">
+      <h2>
+        <button
+          v-if="!isEditing"
+          @click="$router.push({ name: 'Stats' })"
+          class="button back-button"
+        >
+          <img src="@/assets/back.svg" alt="Zurück" style="width: 15px" />
+        </button>
+        <template v-if="isEditing">
+          <input
+            v-model="workoutWithWeights.workout.name"
+            placeholder="Workout-Name"
+            required
+            class="input workout-name-input"
+          />
+        </template>
+        <template v-else>
+          {{ workoutWithWeights.workout.name }}
+        </template>
+      </h2>
+      <table class="workout-table">
+        <tbody>
+          <tr v-for="(exercise, index) in workoutWithWeights.workout.exercise" :key="exercise.id">
+            <td>
+              <div>
+                <template v-if="isEditing">
+                  <select v-model="exercise.name" class="input select-input">
+                    <option value="custom">Benutzerdefiniert</option>
+                    <option disabled value="">Übungsname auswählen</option>
+                    <option v-for="option in exerciseOptions" :key="option" :value="option">
+                      {{ option }}
+                    </option>
+                  </select>
+                  <input
+                    v-if="exercise.name === 'custom'"
+                    v-model="exercise.customName"
+                    placeholder="Übungsname"
+                    required
+                    class="input custom-input"
+                  />
+                </template>
+                <template v-else>
+                  {{ exercise.customName || exercise.name }}
+                </template>
+              </div>
+              <div>
+                <template v-if="isEditing">
+                  <select v-model="exercise.equipment" class="input select-input">
+                    <option disabled value="">Equipment auswählen</option>
+                    <option value="custom">Benutzerdefiniert</option>
+                    <option
+                      v-for="option in equipmentOptions.filter((opt) => opt !== 'custom')"
+                      :key="option"
+                      :value="option"
+                    >
+                      {{ option }}
+                    </option>
+                  </select>
+                  <input
+                    v-if="exercise.equipment === 'custom'"
+                    v-model="exercise.customEquipment"
+                    placeholder="Equipment"
+                    required
+                    class="input custom-input"
+                  />
+                </template>
+                <template v-else>
+                  {{ exercise.customEquipment || exercise.equipment }}
+                </template>
+              </div>
+              <div>
+                <template v-if="isEditing">
+                  <select v-model="exercise.targetMuscleGroup" class="input select-input">
+                    <option disabled value="">Muskelgruppe</option>
+                    <option v-for="group in muscleGroups" :key="group" :value="group">
+                      {{ group }}
+                    </option>
+                  </select>
+                </template>
+                <template v-else>
+                  {{ exercise.targetMuscleGroup }}
+                </template>
+              </div>
+            </td>
+            <td>
+              <div
+                v-for="(rep, repIndex) in workoutWithWeights.weights[index]?.reps || []"
+                :key="repIndex"
+                class="rep-container"
+              >
+                <input
+                  v-model="workoutWithWeights.weights[index].reps[repIndex]"
+                  placeholder="Reps"
+                  required
+                  class="input"
+                />
+                x
+                <input
+                  v-model="workoutWithWeights.weights[index].weights[repIndex]"
+                  placeholder="Weight"
+                  required
+                  class="input"
+                />
+                kg
+              </div>
+              <div class="button-container">
+                <button v-if="isEditing" @click="addRep(index)" class="button add-button">+</button>
+                <button
+                  v-if="isEditing"
+                  @click="removeRep(index)"
+                  :disabled="workoutWithWeights.weights[index]?.reps.length <= 1"
+                  class="button remove-button"
                 >
-                  {{ option }}
-                </option>
-              </select>
-              <input
-                v-if="exercise.equipment === 'custom'"
-                v-model="exercise.customEquipment"
-                placeholder="Equipment"
-                required
-                style="width: 100%"
-              />
-            </template>
-            <template v-else>
-              {{ exercise.customEquipment || exercise.equipment }}
-            </template>
-          </td>
-          <td>
-            <template v-if="isEditing">
-              <select v-model="exercise.targetMuscleGroup" style="width: 100%">
-                <option disabled value="">Muskelgruppe auswählen</option>
-                <option v-for="group in muscleGroups" :key="group" :value="group">
-                  {{ group }}
-                </option>
-              </select>
-            </template>
-            <template v-else>
-              {{ exercise.targetMuscleGroup }}
-            </template>
-          </td>
-          <td>
-            <div
-              v-for="(rep, repIndex) in workoutWithWeights.weights[index]?.reps || []"
-              :key="repIndex"
-              style="display: flex; gap: 10px; align-items: center"
-            >
-              <input
-                v-model="workoutWithWeights.weights[index].reps[repIndex]"
-                placeholder="Reps"
-                required
-                style="width: 100%"
-              />
-              <input
-                v-model="workoutWithWeights.weights[index].weights[repIndex]"
-                placeholder="Weight"
-                required
-                style="width: 100%"
-              />
-            </div>
-            <button v-if="isEditing" @click="addRep(index)">+</button>
-            <button
-              v-if="isEditing"
-              @click="removeRep(index)"
-              :disabled="workoutWithWeights.weights[index]?.reps.length <= 1"
-            >
-              -
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <button v-if="isEditing" @click="toggleEditMode" class="save-button">Zurück</button>
-    <button v-else @click="toggleEditMode" class="save-button">Bearbeiten</button>
-
-    <button @click="saveWorkout" class="save-button">Speichern</button>
+                  -
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="action-buttons">
+        <button v-if="isEditing" @click="toggleEditMode" class="button">
+          <img src="@/assets/back.svg" alt="Zurück" style="width: 15px" />
+        </button>
+        <button v-if="isEditing" @click="addExercise" class="button add-button">
+          Übung hinzufügen
+        </button>
+        <button v-if="isEditing" @click="removeExercise" class="button remove-button">
+          Übung entfernen
+        </button>
+        <button v-if="isEditing" @click="saveWorkout" class="button submit-button">
+          Änderungen Übernehmen
+        </button>
+        <button v-else @click="toggleEditMode" class="button edit-button">Bearbeiten</button>
+      </div>
+    </div>
+    <p v-else>Workout-Daten werden geladen...</p>
   </div>
-  <p v-else>Workout-Daten werden geladen...</p>
 </template>
 
 <script setup>
@@ -168,6 +191,25 @@ const removeRep = (exerciseIndex) => {
   }
 }
 
+const addExercise = () => {
+  workoutWithWeights.value.workout.exercise.push({
+    name: '',
+    equipment: '',
+    targetMuscleGroup: '',
+    customName: '',
+    customEquipment: '',
+  })
+  workoutWithWeights.value.weights.push({
+    reps: [0],
+    weights: [0],
+  })
+}
+
+const removeExercise = () => {
+  workoutWithWeights.value.workout.exercise.pop()
+  workoutWithWeights.value.weights.pop()
+}
+
 const saveWorkout = async () => {
   try {
     const apiUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL
@@ -214,35 +256,141 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.edit-workout {
-  margin-top: 2rem;
+.workout-container {
+  padding: 2rem;
+  background-color: rgb(26, 26, 26);
+  border: 1px solid rgb(0, 110, 255);
+  color: rgb(0, 110, 255);
+  border-radius: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-form div {
-  margin-bottom: 1rem;
+.workout-content {
+  margin-top: 1rem;
 }
 
-label {
-  display: block;
-  margin-bottom: 0.5rem;
-}
-
-input {
+.workout-table {
   width: 100%;
-  padding: 0.5rem;
-  margin-bottom: 1rem;
+  border-collapse: collapse;
+  margin-top: 1rem;
 }
 
-.save-button {
-  background-color: #4caf50;
+.workout-table td {
+  padding: 0.5rem;
+  border: none;
+}
+
+.input {
+  width: 50px;
+  text-align: center;
+  padding: 0.5rem;
+  border: 0px solid #000000;
+  background-color: #111111;
+  color: white;
+  border-radius: 30px;
+  margin-bottom: 3px;
+  outline: none;
+}
+
+.select-input {
+  background-color: #151515;
+  width: 100%;
+  color: rgb(255, 255, 255);
+  text-align: left;
+  margin-bottom: 3px;
+}
+
+.workout-name-input {
+  font-size: 1.5rem;
+  width: 100%;
+}
+
+.custom-input {
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem;
+  border: 0px solid #000000;
+  background-color: #ffffff;
+  color: black;
+  border-radius: 30px;
+  margin-bottom: 3px;
+}
+
+.rep-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.button-container {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.add-button {
+  background-color: #28a745;
+  border-radius: 30px;
+}
+
+.add-button:hover {
+  background-color: #218838;
+}
+
+.remove-button {
+  background-color: #dc3545;
+  border-radius: 30px;
+}
+
+.remove-button:hover {
+  background-color: #c82333;
+}
+
+.button {
+  background-color: #007bff;
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
   cursor: pointer;
-  border-radius: 4px;
+  outline: none;
 }
 
-.save-button:hover {
-  background-color: #45a049;
+.button:hover {
+  background-color: #0056b3;
+}
+
+.submit-button {
+  background-color: #17a2b8;
+}
+
+.submit-button:hover {
+  background-color: #138496;
+}
+
+.edit-button {
+  background-color: white;
+  color: rgb(0, 110, 255);
+  border-radius: 30px;
+}
+
+.edit-button:hover {
+  background-color: rgb(200, 200, 200);
+  color: rgb(0, 110, 255);
+}
+
+.back-button {
+  border-radius: 30px;
+  background-color: rgb(0, 110, 255);
+  margin-bottom: 1rem;
+  margin-right: 1rem;
+  padding: 4px 5px;
+  display: flex;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 1rem;
 }
 </style>

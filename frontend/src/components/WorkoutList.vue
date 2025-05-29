@@ -99,6 +99,9 @@ const deleteExercise = async (workoutId, exId) => {
     return
   }
 
+  const confirmDelete = confirm(`Möchten Sie die Übung wirklich löschen?`)
+  if (!confirmDelete) return
+
   try {
     const response = await fetch(`http://localhost:8080/workout/${workoutId}/${exId}`, {
       method: 'DELETE',
@@ -122,17 +125,18 @@ const deleteWorkout = async (workoutId) => {
     return
   }
 
+  const confirmDelete = confirm(`Möchten Sie das Workout wirklich löschen?`)
+  if (!confirmDelete) return
+
   try {
     const response = await fetch(`http://localhost:8080/workout/${workoutId}`, {
-      method: 'PUT',
+      method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ show: false }),
     })
     if (response.ok) {
-      console.log(`Workout mit ID ${workoutId} erfolgreich ausgeblendet`)
-      // Workouts neu laden, um die Anzeige zu aktualisieren
+      console.log(`Workout erfolgreich gelöscht`)
       loadWorkouts()
     } else {
       console.error('Fehler beim Ausblenden des Workouts:', await response.text())
@@ -154,6 +158,7 @@ const deleteWorkout = async (workoutId) => {
   margin-bottom: 1rem;
   border-collapse: separate;
   overflow: hidden;
+  text-align: left;
 }
 
 .styled-table th,
@@ -168,6 +173,7 @@ const deleteWorkout = async (workoutId) => {
 .styled-table th {
   background-color: #1e1e1e;
   color: rgb(0, 110, 255);
+  text-align: left;
 }
 
 .styled-table tr:nth-child(even) {
@@ -199,6 +205,7 @@ const deleteWorkout = async (workoutId) => {
 .styled-table td:last-child:hover {
   background-color: #c93535;
 }
+
 .no-workouts {
   color: #888;
   margin-top: 1rem;

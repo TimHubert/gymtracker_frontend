@@ -51,13 +51,19 @@
               {{ gruppe }}
             </option>
           </select>
-          <button @click="removeÜbung(index)" type="button">-</button>
+          <button @click="removeÜbung(index)" type="button">
+            <img src="@/assets/remove.svg" alt="Löschen" style="width: 15px; height: auto" />
+          </button>
         </div>
       </div>
     </div>
 
-    <button @click="toggleÜbungen" type="button" class="add">+</button>
-    <button @click="submitWorkout" type="submit" class="submit">Erstellen</button>
+    <button @click="toggleÜbungen" type="button" class="add">
+      <img src="@/assets/add.svg" alt="Löschen" style="width: 15px; height: auto" />
+    </button>
+    <div style="display: flex; justify-content: center; margin-top: 1rem; align-items: center">
+      <button @click="submitWorkout" type="submit" class="submit">Erstellen</button>
+    </div>
   </div>
 </template>
 
@@ -221,10 +227,13 @@ async function submitWorkout() {
   background-color: #ff4d4d;
   color: white;
   border: none;
-  padding: 0.6rem 0.95rem;
-  border-radius: 30px;
+  padding: 0.3rem 0.4rem;
+  border-radius: 15px;
   cursor: pointer;
   outline: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .exercise button:hover {
   background-color: #ff1a1a;
@@ -235,10 +244,13 @@ async function submitWorkout() {
   margin-top: 0.4rem;
   color: white;
   border: none;
-  padding: 0.6rem 0.85rem;
+  padding: 0.3rem 0.4rem;
   border-radius: 30px;
   cursor: pointer;
   outline: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .add:hover {
   background-color: rgb(0, 65, 150);
@@ -246,14 +258,15 @@ async function submitWorkout() {
 
 .submit {
   background-color: rgb(0, 110, 255);
-  margin-top: 0.4rem;
-  margin-left: 0.5rem;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 30px;
   cursor: pointer;
   outline: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .submit:hover {
   background-color: rgb(0, 84, 194);

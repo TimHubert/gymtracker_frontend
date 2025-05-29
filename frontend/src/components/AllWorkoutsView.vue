@@ -29,14 +29,17 @@
           >
             <img src="@/assets/edit.svg" alt="Löschen" style="width: 15px" />
           </router-link>
+          <button class="duplicate-button" @click="duplicateWorkout(workout.id)">
+            <img src="@/assets/duplicate.svg" alt="Löschen" style="width: 15px" />
+          </button>
         </h3>
         <table v-if="workout.workout.exercise?.length > 0" class="styled-table">
           <thead>
             <tr>
               <th>Übung</th>
-              <th>Set 1</th>
-              <th>Set 2</th>
-              <th>Set 3</th>
+              <th v-for="setIndex in maxSets(workout.weights)" :key="'set-' + setIndex">
+                Set {{ setIndex }}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -47,27 +50,11 @@
                   ({{ exercise.targetMuscleGroup }})
                 </span>
               </td>
-              <td>
+              <td v-for="setIndex in maxSets(workout.weights)" :key="'data-' + setIndex">
                 {{
-                  workout.weights[exIndex]?.reps[0] +
+                  workout.weights[exIndex]?.reps[setIndex - 1] +
                     'x' +
-                    workout.weights[exIndex]?.weights[0] +
-                    'kg' || '-'
-                }}
-              </td>
-              <td>
-                {{
-                  workout.weights[exIndex]?.reps[1] +
-                    'x' +
-                    workout.weights[exIndex]?.weights[1] +
-                    'kg' || '-'
-                }}
-              </td>
-              <td>
-                {{
-                  workout.weights[exIndex]?.reps[2] +
-                    'x' +
-                    workout.weights[exIndex]?.weights[2] +
+                    workout.weights[exIndex]?.weights[setIndex - 1] +
                     'kg' || '-'
                 }}
               </td>
@@ -114,19 +101,115 @@ onMounted(() => {
   loadWorkouts()
 })
 
-const deleteWorkout = (workoutId) => {
-  console.log('Workout ID zum Löschen:', workoutId)
-  fetch(`http://localhost:8080/workoutWithWeights/${workoutId}`, {
-    method: 'DELETE',
-  })
+const deleteWorkout = (workoutWithWeightsId) => {
+  console.log('WorkoutWithWeights ID zum Löschen:', workoutWithWeightsId)
+
+  fetch(`http://localhost:8080/workoutWithWeights/${workoutWithWeightsId}`)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error('Fehler beim Abrufen des WorkoutWithWeights')
+      }
+      return response.json()
+    })
+    .then((workoutWithWeights) => {
+      const workoutId = workoutWithWeights.workout.id
+      console.log('Workout ID:', workoutId)
+
+      return fetch(`http://localhost:8080/workoutWithWeights/${workoutWithWeightsId}`, {
+        method: 'DELETE',
+      }).then((response) => {
+        if (!response.ok) {
+          throw new Error('Fehler beim Löschen des WorkoutWithWeights')
+        }
+        console.log(`WorkoutWithWeights mit ID ${workoutWithWeightsId} gelöscht`)
+
+        return fetch(`http://localhost:8080/workout/${workoutId}`, {
+          method: 'DELETE',
+        })
+      })
+    })
     .then((response) => {
       if (!response.ok) {
         throw new Error('Fehler beim Löschen des Workouts')
       }
-      console.log(`Workout mit ID ${workoutId} gelöscht`)
+      console.log('Workout erfolgreich gelöscht')
       loadWorkouts()
     })
     .catch((error) => console.error('Fehler beim Löschen des Workouts:', error))
+}
+
+const duplicateWorkout = async (workoutId) => {
+  try {
+    const response = await fetch(`http://localhost:8080/workoutWithWeights/${workoutId}`)
+    if (!response.ok) {
+      throw new Error(`Fehler beim Abrufen des Workouts: ${response.status}`)
+    }
+    const workoutData = await response.json()
+
+    const newWorkout = {
+      name: workoutData.workout.name,
+      exercise: workoutData.workout.exercise.map((exercise) => ({
+        name: exercise.name,
+        description: exercise.description || 'Keine Beschreibung vorhanden',
+        equipment: exercise.equipment || 'Unbekannt',
+        targetMuscleGroup: exercise.targetMuscleGroup || 'Unbekannt',
+      })),
+      show: false,
+    }
+
+    console.log('Neues Workout:', newWorkout)
+
+    const saveWorkoutResponse = await fetch('http://localhost:8080/workout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newWorkout),
+    })
+
+    if (!saveWorkoutResponse.ok) {
+      throw new Error(`Fehler beim Speichern des neuen Workouts: ${saveWorkoutResponse.status}`)
+    }
+
+    const savedWorkout = await saveWorkoutResponse.json()
+
+    const newWorkoutWithWeights = {
+      ...workoutData,
+      id: undefined,
+      workout: savedWorkout,
+      date: new Date().toISOString(),
+      weights: workoutData.weights.map((weight) => ({
+        reps: [...weight.reps],
+        weights: [...weight.weights],
+      })),
+    }
+
+    const saveWorkoutWithWeightsResponse = await fetch('http://localhost:8080/OneWorkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newWorkoutWithWeights),
+    })
+
+    if (!saveWorkoutWithWeightsResponse.ok) {
+      throw new Error(
+        `Fehler beim Speichern des neuen WorkoutWithWeights: ${saveWorkoutWithWeightsResponse.status}`,
+      )
+    }
+
+    alert('Workout und WorkoutWithWeights erfolgreich dupliziert')
+    loadWorkouts()
+  } catch (error) {
+    console.error('Fehler beim Duplizieren des Workouts:', error)
+    alert('Fehler beim Duplizieren des Workouts')
+  }
+}
+
+const maxSets = (weights) => {
+  return Math.max(...weights.map((weight) => weight.reps.length), 0)
+}
+
+const isSetDefined = (weights, setIndex) => {
+  return weights.some(
+    (weight) => weight.reps[setIndex] !== undefined && weight.weights[setIndex] !== undefined,
+  )
 }
 
 const flattenedWorkouts = computed(() => {
@@ -186,7 +269,7 @@ const flattenedWorkouts = computed(() => {
 .styled-table th {
   background-color: #1e1e1e;
   color: rgb(0, 110, 255);
-  text-align: center;
+  text-align: left;
 }
 
 .styled-table tr:nth-child(even) {
@@ -249,6 +332,21 @@ const flattenedWorkouts = computed(() => {
 }
 
 .edit-button:hover {
+  background-color: rgb(0, 110, 255);
+}
+
+.duplicate-button {
+  margin-left: 3px;
+  background-color: #4d56ff;
+  color: white;
+  font-size: smaller;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 30px;
+}
+
+.duplicate-button:hover {
   background-color: rgb(0, 110, 255);
 }
 

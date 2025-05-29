@@ -2,7 +2,9 @@
   <div class="workout-container">
     <div v-if="editableWorkout" class="workout-content">
       <h2>
-        <button v-if="!isEditing" @click="$emit('back')" class="button back-button"><</button>
+        <button v-if="!isEditing" @click="$emit('back')" class="button back-button">
+          <img src="@/assets/back.svg" alt="Löschen" style="width: 15px" />
+        </button>
         <template v-if="isEditing">
           <input
             v-model="editableWorkout.name"
@@ -96,21 +98,25 @@
                 />
                 kg
               </div>
-              <button v-if="isEditing" @click="addRep(index)" class="button add-button">+</button>
-              <button
-                v-if="isEditing"
-                @click="removeRep(index)"
-                :disabled="exercise.reps.length <= 1"
-                class="button remove-button"
-              >
-                -
-              </button>
+              <div class="button-container">
+                <button v-if="isEditing" @click="addRep(index)" class="button add-button">+</button>
+                <button
+                  v-if="isEditing"
+                  @click="removeRep(index)"
+                  :disabled="exercise.reps.length <= 1"
+                  class="button remove-button"
+                >
+                  -
+                </button>
+              </div>
             </td>
           </tr>
         </tbody>
       </table>
       <div class="action-buttons">
-        <button v-if="isEditing" @click="toggleEditMode" class="button">Zurück</button>
+        <button v-if="isEditing" @click="toggleEditMode" class="button">
+          <img src="@/assets/back.svg" alt="Löschen" style="width: 15px" />
+        </button>
         <button v-if="isEditing" @click="addExercise" class="button add-button">
           Übung hinzufügen
         </button>
@@ -259,7 +265,9 @@ const saveWorkout = () => {
 }
 
 const toggleEditMode = () => {
-  if (!isEditing.value && editableWorkout.value) {
+  if (isEditing.value) {
+    loadWorkout()
+  } else if (editableWorkout.value) {
     editableWorkout.value = JSON.parse(JSON.stringify(workout.value))
   }
   isEditing.value = !isEditing.value
@@ -378,9 +386,9 @@ onMounted(() => {
 }
 
 .select-input {
-  background-color: #ffffff;
+  background-color: #151515;
   width: 100%;
-  color: black;
+  color: rgb(255, 255, 255);
   text-align: left;
   margin-bottom: 3px;
 }
@@ -407,22 +415,15 @@ onMounted(() => {
   align-items: center;
 }
 
-.button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  outline: none;
-}
-
-.button:hover {
-  background-color: #0056b3;
+.button-container {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .add-button {
   background-color: #28a745;
+  border-radius: 30px;
 }
 
 .add-button:hover {
@@ -431,10 +432,25 @@ onMounted(() => {
 
 .remove-button {
   background-color: #dc3545;
+  border-radius: 30px;
 }
 
 .remove-button:hover {
   background-color: #c82333;
+}
+
+.button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  cursor: pointer;
+  outline: none;
+}
+
+.button:hover {
+  background-color: #0056b3;
 }
 
 .submit-button {
@@ -461,6 +477,8 @@ onMounted(() => {
   background-color: rgb(0, 110, 255);
   margin-bottom: 1rem;
   margin-right: 1rem;
+  padding: 4px 5px;
+  display: flex;
 }
 
 .action-buttons {
