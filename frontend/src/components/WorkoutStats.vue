@@ -5,124 +5,133 @@
         <p class="subtitle">Verfolge deinen Fortschritt und bleib motiviert!</p>
       </div>
   
-      <!-- Stats Cards Row -->
-      <div class="stats-cards">
-        <div class="stat-card">
-          <div class="stat-icon">🏋️‍♂️</div>
-          <div class="stat-content">
-            <h3>{{ totalWorkouts }}</h3>
-            <p>Total Workouts</p>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">🔥</div>
-          <div class="stat-content">
-            <h3>{{ currentStreak }}</h3>
-            <p>Tage Streak</p>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">⚖️</div>
-          <div class="stat-content">
-            <h3>{{ Math.round(totalVolume/1000) }}k</h3>
-            <p>Total Volume</p>
-          </div>
-        </div>
-        
-        <div class="stat-card">
-          <div class="stat-icon">⭐</div>
-          <div class="stat-content">
-            <h3>{{ favoriteExerciseShort }}</h3>
-            <p>Top Übung</p>
-          </div>
-        </div>
+      <!-- Loading State -->
+      <div v-if="loading" class="loading-container">
+        <div class="loading-spinner"></div>
+        <p>Lade Statistiken...</p>
       </div>
   
-      <!-- Weekly Summary Section - MOVED HERE! -->
-      <div class="weekly-summary">
-        <h2>📅 Diese Woche</h2>
-        <div class="week-stats">
-          <div class="week-stat">
-            <div class="week-icon">🏋️</div>
-            <div class="week-info">
-              <span class="week-value">3x</span>
-              <span class="week-label">Trainings</span>
+      <!-- Main Content -->
+      <div v-else>
+        <!-- Stats Cards Row -->
+        <div class="stats-cards">
+          <div class="stat-card">
+            <div class="stat-icon">🏋️‍♂️</div>
+            <div class="stat-content">
+              <h3>{{ totalWorkouts }}</h3>
+              <p>Total Workouts</p>
             </div>
           </div>
-          <div class="week-stat">
-            <div class="week-icon">⚖️</div>
-            <div class="week-info">
-              <span class="week-value">2.8t</span>
-              <span class="week-label">Volume</span>
+          
+          <div class="stat-card">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-content">
+              <h3>{{ currentStreak }}</h3>
+              <p>Tage Streak</p>
             </div>
           </div>
-          <div class="week-stat">
-            <div class="week-icon">🚀</div>
-            <div class="week-info">
-              <span class="week-value">+5kg</span>
-              <span class="week-label">Progress</span>
+          
+          <div class="stat-card">
+            <div class="stat-icon">⚖️</div>
+            <div class="stat-content">
+              <h3>{{ totalVolume }}k</h3>
+              <p>Total Volume</p>
             </div>
           </div>
-          <div class="week-stat">
-            <div class="week-icon">🏆</div>
-            <div class="week-info">
-              <span class="week-value">85kg</span>
-              <span class="week-label">Best Lift</span>
+          
+          <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-content">
+              <h3>{{ favoriteExerciseShort }}</h3>
+              <p>Top Übung</p>
             </div>
           </div>
         </div>
-      </div>
   
-      <!-- Charts Section -->
-      <div class="charts-section">
-        
-        <!-- Workout Frequency Chart -->
-        <div class="chart-container">
-          <h2>📅 Workout Häufigkeit (letzte 30 Tage)</h2>
-          <canvas ref="workoutFrequencyChart" id="workoutFrequencyChart"></canvas>
-        </div>
-  
-        <!-- Weight Progression Chart -->
-        <div class="chart-container">
-          <h2>📈 Gewichtsprogression - Bankdrücken</h2>
-          <canvas ref="weightProgressChart" id="weightProgressChart"></canvas>
-        </div>
-  
-        <!-- Exercise Distribution -->
-        <div class="chart-container">
-          <h2>🥧 Übungs-Verteilung</h2>
-          <canvas ref="exerciseDistributionChart" id="exerciseDistributionChart"></canvas>
-        </div>
-  
-        <!-- Volume Tracking -->
-        <div class="chart-container">
-          <h2>💥 Wöchentliches Trainingsvolumen</h2>
-          <canvas ref="volumeChart" id="volumeChart"></canvas>
-        </div>
-  
-      </div>
-  
-      <!-- Progress Section -->
-      <div class="progress-section">
-        <h2>🚀 Fortschrittstracking</h2>
-        
-        <div class="progress-items">
-          <div class="progress-item" v-for="exercise in progressData" :key="exercise.name">
-            <div class="progress-header">
-              <span class="exercise-name">{{ exercise.icon }} {{ exercise.name }}</span>
-              <span class="progress-value">{{ exercise.current }}kg</span>
+        <!-- Weekly Summary Section -->
+        <div class="weekly-summary">
+          <h2>📅 Diese Woche</h2>
+          <div class="week-stats">
+            <div class="week-stat">
+              <div class="week-icon">🏋️</div>
+              <div class="week-info">
+                <span class="week-value">{{ weeklyStats.workoutsThisWeek }}x</span>
+                <span class="week-label">Trainings</span>
+              </div>
             </div>
-            <div class="progress-bar">
-              <div 
-                class="progress-fill" 
-                :style="{ width: exercise.progress + '%' }"
-              ></div>
+            <div class="week-stat">
+              <div class="week-icon">⚖️</div>
+              <div class="week-info">
+                <span class="week-value">{{ weeklyStats.volumeThisWeek }}t</span>
+                <span class="week-label">Volume</span>
+              </div>
             </div>
-            <div class="progress-info">
-              <span>Start: {{ exercise.start }}kg</span>
-              <span>Ziel: {{ exercise.goal }}kg</span>
+            <div class="week-stat">
+              <div class="week-icon">🚀</div>
+              <div class="week-info">
+                <span class="week-value">{{ weeklyStats.progress }}</span>
+                <span class="week-label">Progress</span>
+              </div>
+            </div>
+            <div class="week-stat">
+              <div class="week-icon">🏆</div>
+              <div class="week-info">
+                <span class="week-value">{{ weeklyStats.bestLift }}</span>
+                <span class="week-label">Best Lift</span>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Charts Section -->
+        <div class="charts-section">
+          
+          <!-- Workout Frequency Chart -->
+          <div class="chart-container">
+            <h2>📅 Workout Häufigkeit (letzte 30 Tage)</h2>
+            <canvas ref="workoutFrequencyChart" id="workoutFrequencyChart"></canvas>
+          </div>
+  
+          <!-- Weight Progression Chart -->
+          <div class="chart-container">
+            <h2>📈 Gewichtsprogression - Bankdrücken</h2>
+            <canvas ref="weightProgressChart" id="weightProgressChart"></canvas>
+          </div>
+  
+          <!-- Exercise Distribution -->
+          <div class="chart-container">
+            <h2>🥧 Übungs-Verteilung</h2>
+            <canvas ref="exerciseDistributionChart" id="exerciseDistributionChart"></canvas>
+          </div>
+  
+          <!-- Volume Tracking -->
+          <div class="chart-container">
+            <h2>💥 Wöchentliches Trainingsvolumen</h2>
+            <canvas ref="volumeChart" id="volumeChart"></canvas>
+          </div>
+  
+        </div>
+  
+        <!-- Progress Section -->
+        <div class="progress-section">
+          <h2>🚀 Fortschrittstracking</h2>
+          
+          <div class="progress-items">
+            <div class="progress-item" v-for="exercise in progressData" :key="exercise.name">
+              <div class="progress-header">
+                <span class="exercise-name">{{ exercise.icon }} {{ exercise.name }}</span>
+                <span class="progress-value">{{ exercise.current }}kg</span>
+              </div>
+              <div class="progress-bar">
+                <div 
+                  class="progress-fill" 
+                  :style="{ width: exercise.progress + '%' }"
+                ></div>
+              </div>
+              <div class="progress-info">
+                <span>Start: {{ exercise.start }}kg</span>
+                <span>Ziel: {{ exercise.goal }}kg</span>
+              </div>
             </div>
           </div>
         </div>
@@ -133,18 +142,38 @@
   
   <script>
   import Chart from 'chart.js/auto';
+  import { statsApi } from '@/services/statsApi.js';
   
   export default {
     name: 'WorkoutStats',
     data() {
       return {
-        totalWorkouts: 42,
-        currentStreak: 5,
-        totalVolume: 15750,
-        favoriteExercise: 'Bankdrücken',
-        favoriteExerciseShort: 'Bench',
+        loading: true,
         
-        // Progress Data für die Fortschrittsbalken
+        // Echte Daten von API
+        totalWorkouts: 0,
+        currentStreak: 0,
+        totalVolume: 0,
+        favoriteExercise: '',
+        favoriteExerciseShort: '',
+        
+        // Wöchentliche Statistiken
+        weeklyStats: {
+          workoutsThisWeek: 0,
+          volumeThisWeek: "0",
+          bestLift: "0kg",
+          progress: "+0kg"
+        },
+        
+        // Chart-Daten
+        chartData: {
+          frequency: [],
+          progression: [],
+          distribution: { labels: [], values: [] },
+          volume: []
+        },
+        
+        // Progress Data für die Fortschrittsbalken (statisch)
         progressData: [
           {
             name: 'Bankdrücken',
@@ -177,7 +206,8 @@
       }
     },
     
-    mounted() {
+    async mounted() {
+      await this.loadAllData();
       this.$nextTick(() => {
         this.initializeCharts();
       });
@@ -191,6 +221,39 @@
     },
     
     methods: {
+      async loadAllData() {
+        try {
+          this.loading = true;
+          
+          // Lade alle Statistiken von der API
+          const allStats = await statsApi.getAllStats();
+          
+          // Update main stats
+          this.totalWorkouts = allStats.summary.totalWorkouts;
+          this.currentStreak = allStats.summary.currentStreak;
+          this.totalVolume = allStats.summary.totalVolume;
+          this.favoriteExercise = allStats.summary.favoriteExercise;
+          this.favoriteExerciseShort = allStats.summary.favoriteExerciseShort;
+          
+          // Update weekly stats
+          this.weeklyStats = allStats.weekly;
+          
+          // Update chart data
+          this.chartData.frequency = allStats.frequency;
+          this.chartData.progression = allStats.progression;
+          this.chartData.distribution = allStats.distribution;
+          this.chartData.volume = allStats.volume;
+          
+          console.log('Loaded stats:', allStats);
+          
+        } catch (error) {
+          console.error('Error loading stats:', error);
+          // Bei Fehler bleiben Dummy-Werte
+        } finally {
+          this.loading = false;
+        }
+      },
+  
       initializeCharts() {
         this.createWorkoutFrequencyChart();
         this.createWeightProgressChart();
@@ -207,7 +270,7 @@
             labels: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
             datasets: [{
               label: 'Workouts pro Tag',
-              data: [1, 0, 1, 1, 0, 1, 0],
+              data: this.chartData.frequency,
               borderColor: '#4f46e5',
               backgroundColor: 'rgba(79, 70, 229, 0.1)',
               fill: true,
@@ -260,7 +323,7 @@
             labels: ['Woche 1', 'Woche 2', 'Woche 3', 'Woche 4', 'Woche 5', 'Woche 6'],
             datasets: [{
               label: 'Bankdrücken (kg)',
-              data: [60, 65, 70, 75, 80, 85],
+              data: this.chartData.progression,
               borderColor: '#059669',
               backgroundColor: 'rgba(5, 150, 105, 0.1)',
               fill: true,
@@ -309,9 +372,9 @@
         this.charts.exerciseDistribution = new Chart(ctx, {
           type: 'doughnut',
           data: {
-            labels: ['Bankdrücken', 'Kniebeugen', 'Kreuzheben', 'Schulterdrücken', 'Klimmzüge'],
+            labels: this.chartData.distribution.labels,
             datasets: [{
-              data: [25, 20, 18, 15, 12],
+              data: this.chartData.distribution.values,
               backgroundColor: [
                 '#4f46e5',
                 '#059669', 
@@ -351,8 +414,8 @@
           data: {
             labels: ['KW 1', 'KW 2', 'KW 3', 'KW 4', 'KW 5', 'KW 6'],
             datasets: [{
-              label: 'Volumen (kg)',
-              data: [2500, 2800, 3200, 2900, 3500, 3800],
+              label: 'Volumen (t)',
+              data: this.chartData.volume,
               backgroundColor: 'rgba(79, 70, 229, 0.8)',
               borderColor: '#4f46e5',
               borderWidth: 2,
@@ -395,6 +458,31 @@
   </script>
   
   <style scoped>
+  /* Loading State */
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: #6b7280;
+  }
+  
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e5e7eb;
+    border-top: 4px solid #4f46e5;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
   .stats-dashboard {
     max-width: 1200px;
     margin: 0 auto;
