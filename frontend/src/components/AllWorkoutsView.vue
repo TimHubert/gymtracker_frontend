@@ -239,10 +239,17 @@ const flattenedWorkouts = computed(() => {
 <style scoped>
 .workout-list {
   margin-top: 2rem;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .filter-section {
   margin-bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .filter-section label {
@@ -256,11 +263,19 @@ const flattenedWorkouts = computed(() => {
   background-color: rgb(0, 110, 255);
 }
 
+.table {
+  margin-bottom: 1rem;
+  padding: 0.9rem 0.5rem 0.01px 0.5rem;
+  border-radius: 30px;
+  background-color: none;
+  text-align: center;
+  width: 100%;
+}
+
 .styled-table {
   width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 1rem;
   border-collapse: separate;
+  margin-bottom: 1rem;
   overflow: hidden;
   border-radius: 20px;
 }
@@ -270,13 +285,14 @@ const flattenedWorkouts = computed(() => {
   padding: 8px;
   text-align: left;
   color: white;
-  width: 100%;
 }
 
 .styled-table th {
   background-color: #1e1e1e;
   color: rgb(0, 110, 255);
   text-align: left;
+  position: sticky;
+  top: 0;
 }
 
 .styled-table tr:nth-child(even) {
@@ -286,6 +302,7 @@ const flattenedWorkouts = computed(() => {
 .styled-table tr:nth-child(odd) {
   background-color: #1e1e1e;
 }
+
 .styled-table th:first-child {
   border-top-left-radius: 12px;
 }
@@ -305,6 +322,7 @@ const flattenedWorkouts = computed(() => {
 .styled-table tr:last-child td:last-child {
   border-bottom-right-radius: 20px;
 }
+
 .styled-table tr:last-child td:first-child {
   border-bottom-left-radius: 20px;
 }
@@ -314,13 +332,21 @@ const flattenedWorkouts = computed(() => {
   margin-top: 1rem;
 }
 
-.delete-button {
-  background-color: #ff4d4d;
-  color: white;
+.delete-button,
+.edit-button,
+.duplicate-button {
   border: none;
   padding: 5px 10px;
   cursor: pointer;
   border-radius: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-button {
+  background-color: #ff4d4d;
+  color: white;
 }
 
 .delete-button:hover {
@@ -332,10 +358,6 @@ const flattenedWorkouts = computed(() => {
   background-color: #4d56ff;
   color: white;
   font-size: smaller;
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
-  border-radius: 30px;
 }
 
 .edit-button:hover {
@@ -347,21 +369,62 @@ const flattenedWorkouts = computed(() => {
   background-color: #4d56ff;
   color: white;
   font-size: smaller;
-  border: none;
-  padding: 5px 10px;
-  cursor: pointer;
-  border-radius: 30px;
 }
 
 .duplicate-button:hover {
   background-color: rgb(0, 110, 255);
 }
 
-.table {
-  margin-bottom: 1rem;
-  padding: 0.9rem 0.5rem 0.01px 0.5rem;
-  border-radius: 30px;
-  background-color: none;
-  text-align: center;
+@media (max-width: 768px) {
+  .workout-list {
+    padding: 0 10px;
+  }
+
+  h3 {
+    font-size: 0.95rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .delete-button,
+  .edit-button,
+  .duplicate-button {
+    padding: 4px 8px;
+  }
+
+  .styled-table {
+    font-size: 0.85rem;
+    min-width: 300px;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .styled-table th,
+  .styled-table td {
+    padding: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  h3 {
+    font-size: 0.9rem;
+  }
+
+  .styled-table {
+    font-size: 0.8rem;
+  }
+
+  .styled-table th,
+  .styled-table td {
+    padding: 4px;
+  }
 }
 </style>
