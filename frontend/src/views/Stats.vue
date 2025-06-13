@@ -2,15 +2,15 @@
   <div class="stats-page">
     <!-- Tab Navigation -->
     <div class="tab-navigation">
-      <button 
-        class="tab-button" 
+      <button
+        class="tab-button"
         :class="{ active: activeTab === 'charts' }"
         @click="activeTab = 'charts'"
       >
         📊 Statistiken & Charts
       </button>
-      <button 
-        class="tab-button" 
+      <button
+        class="tab-button"
         :class="{ active: activeTab === 'workouts' }"
         @click="activeTab = 'workouts'"
       >
@@ -20,7 +20,6 @@
 
     <!-- Tab Content -->
     <div class="tab-content">
-      
       <!-- Charts Tab -->
       <div v-if="activeTab === 'charts'" class="charts-tab">
         <WorkoutStats />
@@ -34,7 +33,6 @@
         </div>
         <AllWorkoutsView />
       </div>
-
     </div>
   </div>
 </template>
@@ -51,9 +49,9 @@ export default {
   },
   data() {
     return {
-      activeTab: 'charts' // Startet mit Charts Tab
+      activeTab: 'charts', // Startet mit Charts Tab
     }
-  }
+  },
 }
 </script>
 
@@ -141,16 +139,16 @@ export default {
     flex-direction: column;
     gap: 5px;
   }
-  
+
   .tab-button {
     font-size: 0.9rem;
     padding: 10px 15px;
   }
-  
+
   .workouts-tab {
     padding: 20px;
   }
-  
+
   .workouts-header h2 {
     font-size: 1.8em;
   }

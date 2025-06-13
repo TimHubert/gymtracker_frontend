@@ -1,5 +1,5 @@
 <template>
-  <div class="workout-container">
+  <div class="stats-dashboard">
     <div v-if="workoutWithWeights?.workout" class="workout-content">
       <h2>
         <button
@@ -21,12 +21,16 @@
           {{ workoutWithWeights.workout.name }}
         </template>
       </h2>
-      <table class="workout-table">
-        <tbody>
-          <tr v-for="(exercise, index) in workoutWithWeights.workout.exercise" :key="exercise.id">
-            <td>
-              <div>
-                <template v-if="isEditing">
+      <div class="workout-list">
+        <div
+          v-for="(exercise, index) in workoutWithWeights.workout.exercise"
+          :key="exercise.id"
+          class="exercise-block"
+        >
+          <div class="exercise-details-row">
+            <div class="exercise-detail">
+              <template v-if="isEditing">
+                <div class="inline-input-group">
                   <select v-model="exercise.name" class="input select-input">
                     <option value="custom">Benutzerdefiniert</option>
                     <option disabled value="">Übungsname auswählen</option>
@@ -39,15 +43,17 @@
                     v-model="exercise.customName"
                     placeholder="Übungsname"
                     required
-                    class="input custom-input"
+                    class="input custom-input inline-custom-input"
                   />
-                </template>
-                <template v-else>
-                  {{ exercise.customName || exercise.name }}
-                </template>
-              </div>
-              <div>
-                <template v-if="isEditing">
+                </div>
+              </template>
+              <template v-else>
+                {{ exercise.customName || exercise.name }}
+              </template>
+            </div>
+            <div class="exercise-detail">
+              <template v-if="isEditing">
+                <div class="inline-input-group">
                   <select v-model="exercise.equipment" class="input select-input">
                     <option disabled value="">Equipment auswählen</option>
                     <option value="custom">Benutzerdefiniert</option>
@@ -64,71 +70,71 @@
                     v-model="exercise.customEquipment"
                     placeholder="Equipment"
                     required
-                    class="input custom-input"
+                    class="input custom-input inline-custom-input"
                   />
-                </template>
-                <template v-else>
-                  {{ exercise.customEquipment || exercise.equipment }}
-                </template>
-              </div>
-              <div>
-                <template v-if="isEditing">
-                  <select v-model="exercise.targetMuscleGroup" class="input select-input">
-                    <option disabled value="">Muskelgruppe</option>
-                    <option v-for="group in muscleGroups" :key="group" :value="group">
-                      {{ group }}
-                    </option>
-                  </select>
-                </template>
-                <template v-else>
-                  {{ exercise.targetMuscleGroup }}
-                </template>
-              </div>
-            </td>
-            <td>
-              <div
-                v-for="(rep, repIndex) in workoutWithWeights.weights[index]?.reps || []"
-                :key="repIndex"
-                class="rep-container"
+                </div>
+              </template>
+              <template v-else>
+                {{ exercise.customEquipment || exercise.equipment }}
+              </template>
+            </div>
+            <div class="exercise-detail">
+              <template v-if="isEditing">
+                <select v-model="exercise.targetMuscleGroup" class="input select-input">
+                  <option disabled value="">Muskelgruppe</option>
+                  <option v-for="group in muscleGroups" :key="group" :value="group">
+                    {{ group }}
+                  </option>
+                </select>
+              </template>
+              <template v-else>
+                {{ exercise.targetMuscleGroup }}
+              </template>
+            </div>
+          </div>
+          <div class="exercise-reps-row">
+            <div
+              v-for="(rep, repIndex) in workoutWithWeights.weights[index]?.reps || []"
+              :key="repIndex"
+              class="rep-container"
+            >
+              <input
+                v-if="isEditing"
+                v-model="workoutWithWeights.weights[index].reps[repIndex]"
+                placeholder="Reps"
+                required
+                class="input rep-input"
+                type="number"
+                min="0"
+              />
+              <span v-else>{{ workoutWithWeights.weights[index].reps[repIndex] }}</span>
+              x
+              <input
+                v-if="isEditing"
+                v-model="workoutWithWeights.weights[index].weights[repIndex]"
+                placeholder="Weight"
+                required
+                class="input weight-input"
+                type="number"
+                min="0"
+              />
+              <span v-else>{{ workoutWithWeights.weights[index].weights[repIndex] }}</span>
+              kg
+            </div>
+            <div class="button-container">
+              <button v-if="isEditing" @click="addRep(index)" class="button add-button">+</button>
+              <button
+                v-if="isEditing"
+                @click="removeRep(index)"
+                :disabled="workoutWithWeights.weights[index]?.reps.length <= 1"
+                class="button remove-button"
               >
-                <input
-                  v-if="isEditing"
-                  v-model="workoutWithWeights.weights[index].reps[repIndex]"
-                  placeholder="Reps"
-                  required
-                  class="input"
-                  type="number"
-                  min="0"
-                />
-                <span v-else>{{ workoutWithWeights.weights[index].reps[repIndex] }}</span>
-                x
-                <input
-                  v-if="isEditing"
-                  v-model="workoutWithWeights.weights[index].weights[repIndex]"
-                  placeholder="Weight"
-                  required
-                  class="input"
-                  type="number"
-                  min="0"
-                />
-                <span v-else>{{ workoutWithWeights.weights[index].weights[repIndex] }}</span>
-                kg
-              </div>
-              <div class="button-container">
-                <button v-if="isEditing" @click="addRep(index)" class="button add-button">+</button>
-                <button
-                  v-if="isEditing"
-                  @click="removeRep(index)"
-                  :disabled="workoutWithWeights.weights[index]?.reps.length <= 1"
-                  class="button remove-button"
-                >
-                  -
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                -
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="action-buttons">
         <button v-if="isEditing" @click="cancelEdit" class="button">
           <img src="@/assets/back.svg" alt="Zurück" style="width: 15px" />
@@ -362,141 +368,362 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.workout-container {
-  padding: 2rem;
-  background-color: rgb(26, 26, 26);
-  border: 1px solid rgb(0, 110, 255);
-  color: rgb(0, 110, 255);
-  border-radius: 30px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.stats-dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 25px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #cbd5e1 100%);
+  border-radius: 25px;
+  color: #1f2937;
+  min-height: 100vh;
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.1),
+    0 4px 20px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
 }
 
-.workout-content {
-  margin-top: 1rem;
+.stats-dashboard::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(79, 70, 229, 0.03) 0%, transparent 70%);
+  pointer-events: none;
 }
 
-.workout-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-}
-
-.workout-table td {
-  padding: 0.5rem;
-  border: none;
-}
-
-.input {
-  width: 50px;
+.dashboard-header {
   text-align: center;
-  padding: 0.5rem;
-  border: 0px solid #000000;
-  background-color: #111111;
-  color: white;
-  border-radius: 30px;
-  margin-bottom: 3px;
-  outline: none;
+  margin-bottom: 40px;
 }
 
-.select-input {
-  background-color: #151515;
-  width: 100%;
-  color: rgb(255, 255, 255);
-  text-align: left;
-  margin-bottom: 3px;
+.dashboard-header h1 {
+  font-size: 2.8em;
+  margin: 0 0 15px 0;
+  font-weight: 800;
+  background: linear-gradient(135deg, #4f46e5, #059669);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
 }
 
-.workout-name-input {
-  font-size: 1.5rem;
-  width: 100%;
+.subtitle {
+  font-size: 1.3em;
+  color: #6b7280;
+  margin: 0;
+  font-weight: 500;
 }
 
+.input,
+.select-input,
 .custom-input {
-  width: 100%;
-  text-align: left;
-  padding: 0.5rem;
-  border: 0px solid #000000;
-  background-color: #ffffff;
-  color: black;
-  border-radius: 30px;
-  margin-bottom: 3px;
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
+  border: 1px solid #d1d5db;
+  padding: 8px 14px;
+  outline: none;
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
+  font-size: 1em;
+  background: #fff;
+  outline: none;
+  margin-bottom: 18px;
+  max-width: 100%;
+}
+
+.input:last-child,
+.select-input:last-child,
+.custom-input:last-child {
+  margin-bottom: 0;
+}
+
+.button {
+  border: none;
+  border-radius: 16px;
+  padding: 8px 18px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 4px 6px;
+  transition:
+    background 0.18s,
+    color 0.18s,
+    box-shadow 0.18s,
+    transform 0.1s;
+  background: linear-gradient(135deg, #6366f1 60%, #06b6d4 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.08);
+}
+
+.button:active {
+  transform: scale(0.97);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.add-button {
+  background: linear-gradient(135deg, #22c55e 60%, #4ade80 100%);
+  color: #fff;
+}
+
+.remove-button {
+  background: linear-gradient(135deg, #ef4444 60%, #f87171 100%);
+  color: #fff;
+}
+
+.edit-button {
+  background: linear-gradient(135deg, #f59e42 60%, #fbbf24 100%);
+  color: #fff;
+}
+
+.submit-button {
+  background: linear-gradient(135deg, #6366f1 60%, #06b6d4 100%);
+  color: #fff;
+}
+
+.back-button {
+  background: transparent;
+  box-shadow: none;
+  padding: 6px 10px;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+.workout-list {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-top: 24px;
+}
+
+.exercise-block {
+  background: #f8fafc;
+  border-radius: 18px;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.06);
+  padding: 18px 18px 12px 18px;
+  margin-bottom: 0;
+}
+
+.exercise-details-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 10px;
+}
+
+.exercise-detail {
+  flex: 1 1 0;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 1.08em;
+  display: flex;
+  align-items: center;
+  max-width: 100%;
+}
+
+.inline-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inline-input-group .input,
+.inline-input-group .custom-input,
+.inline-input-group .select-input,
+.inline-custom-input {
+  height: 38px;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  box-sizing: border-box;
+  font-size: 1em;
+}
+
+.inline-custom-input {
+  width: 120px;
+  margin-bottom: 0;
+}
+
+.exercise-reps-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 0;
 }
 
 .rep-container {
   display: flex;
-  gap: 10px;
   align-items: center;
+  gap: 6px;
+  margin-bottom: 0;
+  background: #e0e7ef;
+  border-radius: 12px;
+  padding: 6px 12px;
+  font-size: 1em;
+}
+
+.rep-input,
+.weight-input {
+  width: 60px;
+  height: 38px;
+  padding: 8px 14px;
+  font-size: 1em;
+  border: 1px solid #d1d5db;
+  border-radius: 18px;
+  background: #fff;
+  box-sizing: border-box;
+  text-align: center;
+  margin-bottom: 0;
+
+  -moz-appearance: textfield;
+}
+.rep-input::-webkit-outer-spin-button,
+.rep-input::-webkit-inner-spin-button,
+.weight-input::-webkit-outer-spin-button,
+.weight-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .button-container {
   display: flex;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 6px;
+  margin-left: 12px;
+  align-items: center;
 }
 
-.add-button {
-  background-color: #28a745;
-  border-radius: 30px;
+@media (max-width: 768px) {
+  .stats-dashboard {
+    padding: 20px;
+    margin: 0;
+    border-radius: 30px;
+    width: 100%;
+  }
+
+  .exercise-details-row {
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .exercise-detail {
+    width: 100%;
+    min-width: unset;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .inline-input-group {
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .select-input {
+    width: 100%;
+    max-width: 100%;
+    text-align: center;
+  }
+
+  .inline-custom-input {
+    margin-top: 8px;
+    margin-bottom: 4px;
+    width: 100%;
+    text-align: center;
+  }
+
+  .exercise-reps-row {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .rep-container {
+    width: calc(100% - 24px);
+    justify-content: center;
+    text-align: center;
+  }
+
+  .rep-input,
+  .weight-input {
+    width: 45px;
+    text-align: center;
+  }
+
+  .button-container {
+    width: 100%;
+    justify-content: center;
+    margin-left: 0;
+    margin-top: 8px;
+  }
+
+  .action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .button {
+    padding: 8px 16px;
+    margin: 6px;
+  }
+
+  .workout-name-input {
+    text-align: center;
+  }
 }
 
-.add-button:hover {
-  background-color: #218838;
-}
+@media (max-width: 480px) {
+  .stats-dashboard {
+    padding: 15px;
+    margin: 0;
+    width: 100%;
+    min-height: 100vh;
+    border-radius: 30px;
+  }
 
-.remove-button {
-  background-color: #dc3545;
-  border-radius: 30px;
-}
+  h2 {
+    font-size: 1.5em;
+    text-align: center;
+  }
 
-.remove-button:hover {
-  background-color: #c82333;
-}
+  .workout-name-input {
+    width: 100%;
+    max-width: 250px;
+    margin: 0 auto;
+    text-align: center;
+  }
 
-.button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 30px;
-  cursor: pointer;
-  outline: none;
-}
+  .exercise-block {
+    padding: 14px;
+    text-align: center;
+  }
 
-.button:hover {
-  background-color: #0056b3;
-}
+  .rep-input,
+  .weight-input {
+    width: 40px;
+    padding: 6px 10px;
+    text-align: center;
+  }
 
-.submit-button {
-  background-color: #17a2b8;
-}
+  .button {
+    padding: 8px 12px;
+    font-size: 0.9em;
+    margin: 5px;
+  }
 
-.submit-button:hover {
-  background-color: #138496;
-}
-
-.edit-button {
-  background-color: white;
-  color: rgb(0, 110, 255);
-  border-radius: 30px;
-}
-
-.edit-button:hover {
-  background-color: rgb(200, 200, 200);
-  color: rgb(0, 110, 255);
-}
-
-.back-button {
-  border-radius: 30px;
-  background-color: rgb(0, 110, 255);
-  margin-bottom: 1rem;
-  margin-right: 1rem;
-  padding: 4px 5px;
-  display: flex;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 10px;
-  margin-top: 1rem;
+  .back-button {
+    display: block;
+    margin: 0 auto 10px auto;
+  }
 }
 </style>
