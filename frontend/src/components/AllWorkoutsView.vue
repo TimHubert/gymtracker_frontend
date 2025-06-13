@@ -375,9 +375,11 @@ const flattenedWorkouts = computed(() => {
   background-color: rgb(0, 110, 255);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .workout-list {
     padding: 0 10px;
+    max-height: 100vh;
+    overflow-y: auto;
   }
 
   h3 {
@@ -396,15 +398,36 @@ const flattenedWorkouts = computed(() => {
 
   .styled-table {
     font-size: 0.85rem;
-    min-width: 300px;
+    width: 100%;
     display: block;
-    overflow-x: auto;
+    overflow-x: auto; /* beibehalten für ältere Geräte */
     white-space: nowrap;
   }
 
   .styled-table th,
   .styled-table td {
     padding: 6px;
+  }
+}
+
+@media (max-width: 574px) {
+  .workout-list {
+    margin: 0;
+    padding: 0;
+  }
+
+  .styled-table {
+    font-size: 0.8rem;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: visible; /* kein horizontales Scrollen */
+    white-space: normal; /* Text kann umbrechen */
+  }
+
+  .styled-table th,
+  .styled-table td {
+    padding: 4px 2px;
+    font-size: 0.75rem;
   }
 }
 

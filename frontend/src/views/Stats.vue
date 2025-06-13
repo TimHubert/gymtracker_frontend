@@ -49,7 +49,7 @@ export default {
   },
   data() {
     return {
-      activeTab: 'charts', // Startet mit Charts Tab
+      activeTab: 'workouts', // Startet mit Charts Tab
     }
   },
 }

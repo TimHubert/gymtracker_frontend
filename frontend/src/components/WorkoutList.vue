@@ -184,18 +184,19 @@ const deleteWorkout = async (workoutId) => {
   background-color: #1e1e1e;
 }
 .styled-table th:first-child {
-  border-top-left-radius: 20px;
+  border-top-left-radius: 10px;
 }
 
 .styled-table th:last-child {
-  border-top-right-radius: 20px;
+  border-top-right-radius: 10px;
 }
 
 .styled-table tr:last-child td:last-child {
-  border-bottom-right-radius: 20px;
+  border-bottom-right-radius: 10px;
 }
+
 .styled-table tr:last-child td:first-child {
-  border-bottom-left-radius: 20px;
+  border-bottom-left-radius: 10px;
 }
 
 .styled-table td:last-child {
@@ -223,5 +224,75 @@ const deleteWorkout = async (workoutId) => {
 
 .delete-button:hover {
   background-color: #971d1d;
+}
+
+/* Responsive Design für Handys und Tablets */
+@media (max-width: 768px) {
+  .workout-list {
+    padding: 0 10px;
+  }
+
+  .styled-table {
+    font-size: 0.85rem;
+  }
+
+  .styled-table th,
+  .styled-table td {
+    padding: 6px;
+  }
+}
+
+@media (max-width: 574px) {
+  .workout-list {
+    margin: 0;
+    padding: 0;
+  }
+
+  .styled-table {
+    font-size: 0.8rem;
+    width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
+  }
+
+  .styled-table th,
+  .styled-table td {
+    padding: 4px 2px;
+    font-size: 0.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Spaltenbreiten anpassen */
+  .styled-table th:nth-child(1),
+  .styled-table td:nth-child(1) {
+    width: 35%;
+  }
+
+  .styled-table th:nth-child(2),
+  .styled-table td:nth-child(2) {
+    width: 25%;
+  }
+
+  .styled-table th:nth-child(3),
+  .styled-table td:nth-child(3) {
+    width: 30%;
+  }
+
+  .styled-table th:nth-child(4),
+  .styled-table td:nth-child(4) {
+    width: 10%;
+  }
+}
+
+@media (max-width: 480px) {
+  h3 {
+    font-size: 0.9rem;
+  }
+
+  .styled-table {
+    font-size: 0.7rem;
+  }
 }
 </style>
