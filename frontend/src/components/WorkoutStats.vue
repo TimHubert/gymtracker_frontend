@@ -9,7 +9,9 @@
 
     <div class="stat-box">
       <h2>Übungsstatistik</h2>
-      <canvas ref="exerciseChartCanvas"></canvas>
+      <div class="chart-container">
+        <canvas ref="exerciseChartCanvas"></canvas>
+      </div>
     </div>
 
     <div class="stat-box">
@@ -191,7 +193,6 @@ const createExerciseChart = () => {
               'rgba(0, 110, 255, 1)',
               'rgba(255, 99, 132, 1)',
               'rgba(75, 192, 192, 1)',
-              // ...existing or additional colors...
             ],
             borderWidth: 0,
             borderColor: 'transparent',
@@ -199,8 +200,20 @@ const createExerciseChart = () => {
         ],
       },
       options: {
+        aspectRatio: 1.5,
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: {
+          padding: {
+            left: 50,
+            right: 50,
+            top: 0,
+            bottom: 0,
+          },
+        },
         plugins: {
           legend: {
+            position: 'bottom',
             labels: {
               font: {
                 family: 'Montserrat',
@@ -792,6 +805,15 @@ canvas {
 
 .stat-box canvas {
   margin-top: 1rem;
+}
+
+.chart-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  max-width: 300px;
+  margin: 0 auto;
 }
 
 @media (max-width: 900px) {

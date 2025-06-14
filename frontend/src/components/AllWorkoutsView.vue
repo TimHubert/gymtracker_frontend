@@ -3,7 +3,15 @@
     <h2>Alle Workouts</h2>
     <div class="filter-section">
       <label for="date-filter">Filter nach Datum:</label>
-      <input id="date-filter" type="date" v-model="selectedDate" @change="filterWorkoutsByDate" />
+      <input id="date-filter" type="date" v-model="selectedDate" @change="applyFilters" />
+
+      <label for="workout-select">Workout auswählen:</label>
+      <select id="workout-select" v-model="selectedWorkout" @change="applyFilters">
+        <option value="">Alle Workouts</option>
+        <option v-for="name in uniqueWorkoutNames" :key="name" :value="name">
+          {{ name }}
+        </option>
+      </select>
     </div>
     <div v-if="filteredWorkouts.length">
       <div
@@ -80,6 +88,13 @@ import { ref, onMounted, computed } from 'vue'
 const workouts = ref([])
 const filteredWorkouts = ref([])
 const selectedDate = ref('')
+const selectedWorkout = ref('')
+
+// Funktion zum Finden des letzten Workout-Datums
+const findLatestWorkoutDate = (workouts) => {
+  if (!workouts || workouts.length === 0) return ''
+  return workouts.map((w) => w.date).sort((a, b) => new Date(b) - new Date(a))[0]
+}
 
 const loadWorkouts = () => {
   fetch('http://localhost:8080/workoutsWithWeights')
@@ -87,27 +102,54 @@ const loadWorkouts = () => {
     .then((data) => {
       console.log('Geladene Workouts:', JSON.stringify(data, null, 2))
       workouts.value = data
-      filteredWorkouts.value = data
+      // Setze das letzte Workout-Datum als Standardwert
+      if (!selectedDate.value) {
+        selectedDate.value = findLatestWorkoutDate(data)
+      }
+      applyFilters()
     })
     .catch((error) => console.error('Fehler beim Laden der Workouts:', error))
 }
 
-const filterWorkoutsByDate = () => {
+
+const uniqueWorkoutNames = computed(() => {
+  const names = new Set(workouts.value.map((w) => w.workout.name))
+  return Array.from(names).sort()
+})
+
+// Filter anwenden
+const applyFilters = () => {
+  let filtered = workouts.value
+
+  // Filter nach Datum
   if (selectedDate.value) {
-    filteredWorkouts.value = workouts.value.filter(
+    filtered = filtered.filter(
       (workout) =>
         new Date(workout.date).toLocaleDateString('de-DE') ===
         new Date(selectedDate.value).toLocaleDateString('de-DE'),
     )
-  } else {
-    filteredWorkouts.value = workouts.value
   }
+
+  // Filter nach ausgewähltem Workout
+  if (selectedWorkout.value) {
+    filtered = filtered.filter((workout) => workout.workout.name === selectedWorkout.value)
+  }
+
+  filteredWorkouts.value = filtered
+}
+
+// Diese Funktion wird durch applyFilters ersetzt
+const filterWorkoutsByDate = () => {
+  applyFilters()
 }
 
 onMounted(() => {
+  // Setze Standardwerte
+  selectedWorkout.value = '' // "Alle Workouts" als Standard
   loadWorkouts()
 })
 
+// Workout löschen
 const deleteWorkout = (workoutWithWeightsId) => {
   console.log('WorkoutWithWeights ID zum Löschen:', workoutWithWeightsId)
 
@@ -145,6 +187,7 @@ const deleteWorkout = (workoutWithWeightsId) => {
     .catch((error) => console.error('Fehler beim Löschen des Workouts:', error))
 }
 
+// Workout duplizieren
 const duplicateWorkout = async (workoutId) => {
   try {
     const response = await fetch(`http://localhost:8080/workoutWithWeights/${workoutId}`)
@@ -209,6 +252,7 @@ const duplicateWorkout = async (workoutId) => {
   }
 }
 
+// Maximale Anzahl der Sätze bestimmen
 const maxSets = (weights) => {
   return Math.max(...weights.map((weight) => weight.reps.length), 0)
 }
@@ -256,11 +300,17 @@ const flattenedWorkouts = computed(() => {
   margin-right: 0.5rem;
 }
 
-.filter-section input {
+.filter-section input,
+.filter-section select {
   padding: 0.5rem;
   border-radius: 30px;
   border: none;
   background-color: rgb(0, 110, 255);
+  color: white;
+}
+
+.filter-section input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .table {
@@ -459,6 +509,11 @@ const flattenedWorkouts = computed(() => {
   .filter-section {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .filter-section input,
+  .filter-section select {
+    width: 100%;
   }
 
   h3 {

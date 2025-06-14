@@ -29,7 +29,6 @@
       <div v-if="activeTab === 'workouts'" class="workouts-tab">
         <div class="workouts-header">
           <h2>📋 Alle deine Workouts</h2>
-          <p>Hier siehst du eine Übersicht all deiner Trainingseinheiten</p>
         </div>
         <AllWorkoutsView />
       </div>
@@ -131,11 +130,15 @@ export default {
   .tab-navigation {
     flex-direction: column;
     gap: 5px;
+    padding: 5px;
+    width: 100%;
   }
 
   .tab-button {
-    font-size: 0.9rem;
-    padding: 10px 15px;
+    width: 100%;
+    font-size: 1rem;
+    padding: 15px 20px;
+    margin: 2px 0;
   }
 
   .workouts-tab {
@@ -149,7 +152,7 @@ export default {
 
 @media (max-width: 480px) {
   .stats-page {
-    padding: 10px;
+    padding: 10px 5px;
   }
 
   .workouts-header h2 {
@@ -158,6 +161,18 @@ export default {
 
   .workouts-header p {
     font-size: 0.9em;
+  }
+
+  .workouts-tab {
+    padding: 10px;
+    width: 120%;
+    margin-left: -10%;
+  }
+
+  .charts-tab {
+    padding: 10px;
+    width: 120%;
+    margin-left: -10%;
   }
 }
 </style>

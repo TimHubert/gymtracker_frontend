@@ -372,8 +372,9 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 25px;
+  background: none;
   border-radius: 25px;
-  color: #1f2937;
+  color: #ffffff;
   min-height: 100vh;
   position: relative;
   overflow: hidden;
@@ -410,24 +411,28 @@ onMounted(() => {
 .select-input,
 .custom-input {
   border-radius: 18px;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
-  border: 1px solid #d1d5db;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border: 1px solid #4d4d4d;
   padding: 8px 14px;
   outline: none;
   transition:
     box-shadow 0.2s,
     border-color 0.2s;
   font-size: 1em;
-  background: #fff;
-  outline: none;
+  background: #3d3d3d;
+  color: #ffffff;
   margin-bottom: 18px;
   max-width: 100%;
 }
 
-.input:last-child,
-.select-input:last-child,
-.custom-input:last-child {
-  margin-bottom: 0;
+/* Neue Styles für Select-Optionen */
+select option {
+  background: #3d3d3d;
+  color: #ffffff;
+}
+
+select option:disabled {
+  color: #999999;
 }
 
 .button {
@@ -443,7 +448,7 @@ onMounted(() => {
     color 0.18s,
     box-shadow 0.18s,
     transform 0.1s;
-  background: linear-gradient(135deg, #6366f1 60%, #06b6d4 100%);
+  background: #3b82f6; /* Einheitliches Blau statt Gradient */
   color: #fff;
   box-shadow: 0 2px 8px rgba(79, 70, 229, 0.08);
 }
@@ -458,23 +463,19 @@ onMounted(() => {
 }
 
 .add-button {
-  background: linear-gradient(135deg, #22c55e 60%, #4ade80 100%);
-  color: #fff;
+  background: #22c55e; /* Einheitliches Grün statt Gradient */
 }
 
 .remove-button {
-  background: linear-gradient(135deg, #ef4444 60%, #f87171 100%);
-  color: #fff;
+  background: #ef4444; /* Einheitliches Rot statt Gradient */
 }
 
 .edit-button {
-  background: linear-gradient(135deg, #f59e42 60%, #fbbf24 100%);
-  color: #fff;
+  background: #f59e0b; /* Einheitliches Orange statt Gradient */
 }
 
 .submit-button {
-  background: linear-gradient(135deg, #6366f1 60%, #06b6d4 100%);
-  color: #fff;
+  background: #3b82f6; /* Einheitliches Blau statt Gradient */
 }
 
 .back-button {
@@ -493,9 +494,9 @@ onMounted(() => {
 }
 
 .exercise-block {
-  background: #f8fafc;
+  background: #2d2d2d;
   border-radius: 18px;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   padding: 18px 18px 12px 18px;
   margin-bottom: 0;
 }
@@ -554,7 +555,7 @@ onMounted(() => {
   align-items: center;
   gap: 6px;
   margin-bottom: 0;
-  background: #e0e7ef;
+  background: #4d4d4d;
   border-radius: 12px;
   padding: 6px 12px;
   font-size: 1em;
@@ -562,13 +563,14 @@ onMounted(() => {
 
 .rep-input,
 .weight-input {
-  width: 60px;
+  width: 70px; /* von 60px auf 70px erhöht */
   height: 38px;
   padding: 8px 14px;
   font-size: 1em;
   border: 1px solid #d1d5db;
   border-radius: 18px;
   background: #fff;
+  color: #000000;
   box-sizing: border-box;
   text-align: center;
   margin-bottom: 0;
@@ -643,7 +645,7 @@ onMounted(() => {
 
   .rep-input,
   .weight-input {
-    width: 45px;
+    width: 70px; /* von 60px auf 70px erhöht */
     text-align: center;
   }
 
@@ -699,7 +701,7 @@ onMounted(() => {
 
   .rep-input,
   .weight-input {
-    width: 40px;
+    width: 55px; /* von 40px auf 55px erhöht */
     padding: 6px 10px;
     text-align: center;
   }
