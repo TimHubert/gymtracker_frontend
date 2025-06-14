@@ -267,7 +267,7 @@ const flattenedWorkouts = computed(() => {
   margin-bottom: 1rem;
   padding: 0.9rem 0.5rem 0.01px 0.5rem;
   border-radius: 30px;
-  background-color: none;
+  background-color: transparent;
   text-align: center;
   width: 100%;
 }
@@ -278,6 +278,8 @@ const flattenedWorkouts = computed(() => {
   margin-bottom: 1rem;
   overflow: hidden;
   border-radius: 20px;
+  table-layout: fixed;
+  min-width: 100%;
 }
 
 .styled-table th,
@@ -285,6 +287,9 @@ const flattenedWorkouts = computed(() => {
   padding: 8px;
   text-align: left;
   color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .styled-table th {
@@ -396,12 +401,31 @@ const flattenedWorkouts = computed(() => {
     padding: 4px 8px;
   }
 
+  .table {
+    width: 100%;
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
   .styled-table {
     font-size: 0.85rem;
-    width: 100%;
-    display: block;
-    overflow-x: auto; /* beibehalten für ältere Geräte */
+    width: max-content;
+    min-width: 100%;
+    display: table;
     white-space: nowrap;
+    table-layout: fixed;
+  }
+
+  .styled-table th:first-child,
+  .styled-table td:first-child {
+    min-width: 140px;
+    max-width: 25%;
+  }
+
+  .styled-table th:not(:first-child),
+  .styled-table td:not(:first-child) {
+    width: auto;
   }
 
   .styled-table th,
@@ -420,8 +444,8 @@ const flattenedWorkouts = computed(() => {
     font-size: 0.8rem;
     width: 100%;
     max-width: 100%;
-    overflow-x: visible; /* kein horizontales Scrollen */
-    white-space: normal; /* Text kann umbrechen */
+    overflow-x: auto;
+    white-space: nowrap;
   }
 
   .styled-table th,
@@ -443,6 +467,12 @@ const flattenedWorkouts = computed(() => {
 
   .styled-table {
     font-size: 0.8rem;
+    table-layout: auto;
+  }
+
+  .styled-table th:first-child,
+  .styled-table td:first-child {
+    min-width: 100px;
   }
 
   .styled-table th,

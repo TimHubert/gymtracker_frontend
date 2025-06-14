@@ -1,884 +1,434 @@
 <template>
-  <div class="stats-dashboard">
-    <div class="dashboard-header">
-      <h1>Deine Workout Statistiken</h1>
-      <p class="subtitle">Verfolge deinen Fortschritt und bleib motiviert!</p>
-    </div>
-
-    <!-- Loading State -->
-    <div v-if="loading" class="loading-container">
-      <div class="loading-spinner"></div>
-      <p>Lade Statistiken...</p>
-    </div>
-
-    <!-- Main Content -->
-    <div v-else>
-      <!-- Stats Cards Row -->
-      <div class="stats-cards">
-        <div class="stat-card">
-          <div class="stat-icon">🏋️‍♂️</div>
-          <div class="stat-content">
-            <h3>{{ totalWorkouts }}</h3>
-            <p>Total Workouts</p>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon">🔥</div>
-          <div class="stat-content">
-            <h3>{{ currentStreak }}</h3>
-            <p>Tage Streak</p>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon">⚖️</div>
-          <div class="stat-content">
-            <h3>{{ totalVolume }}k</h3>
-            <p>Total Volume</p>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon">⭐</div>
-          <div class="stat-content">
-            <h3>{{ favoriteExerciseShort }}</h3>
-            <p>Top Übung</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Weekly Summary Section -->
-      <div class="weekly-summary">
-        <h2>📅 Diese Woche</h2>
-        <div class="week-stats">
-          <div class="week-stat">
-            <div class="week-icon">🏋️</div>
-            <div class="week-info">
-              <span class="week-value">{{ weeklyStats.workoutsThisWeek }}x</span>
-              <span class="week-label">Trainings</span>
-            </div>
-          </div>
-          <div class="week-stat">
-            <div class="week-icon">⚖️</div>
-            <div class="week-info">
-              <span class="week-value">{{ weeklyStats.volumeThisWeek }}t</span>
-              <span class="week-label">Volume</span>
-            </div>
-          </div>
-          <div class="week-stat">
-            <div class="week-icon">🚀</div>
-            <div class="week-info">
-              <span class="week-value">{{ weeklyStats.progress }}</span>
-              <span class="week-label">Progress</span>
-            </div>
-          </div>
-          <div class="week-stat">
-            <div class="week-icon">🏆</div>
-            <div class="week-info">
-              <span class="week-value">{{ weeklyStats.bestLift }}</span>
-              <span class="week-label">Best Lift</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Charts Section -->
-      <div class="charts-section">
-        <!-- Workout Frequency Chart -->
-        <div class="chart-container">
-          <h2>📅 Workout Häufigkeit (letzte 30 Tage)</h2>
-          <canvas ref="workoutFrequencyChart" id="workoutFrequencyChart"></canvas>
-        </div>
-
-        <!-- Weight Progression Chart -->
-        <div class="chart-container">
-          <h2>📈 Gewichtsprogression - Bankdrücken</h2>
-          <canvas ref="weightProgressChart" id="weightProgressChart"></canvas>
-        </div>
-
-        <!-- Exercise Distribution -->
-        <div class="chart-container">
-          <h2>🥧 Übungs-Verteilung</h2>
-          <canvas ref="exerciseDistributionChart" id="exerciseDistributionChart"></canvas>
-        </div>
-
-        <!-- Volume Tracking -->
-        <div class="chart-container">
-          <h2>💥 Wöchentliches Trainingsvolumen</h2>
-          <canvas ref="volumeChart" id="volumeChart"></canvas>
-        </div>
-      </div>
-
-      <!-- Progress Section -->
-      <div class="progress-section">
-        <h2>🚀 Fortschrittstracking</h2>
-
-        <div class="progress-items">
-          <div class="progress-item" v-for="exercise in progressData" :key="exercise.name">
-            <div class="progress-header">
-              <span class="exercise-name">{{ exercise.icon }} {{ exercise.name }}</span>
-              <span class="progress-value">{{ exercise.current }}kg</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill" :style="{ width: exercise.progress + '%' }"></div>
-            </div>
-            <div class="progress-info">
-              <span>Start: {{ exercise.start }}kg</span>
-              <span>Ziel: {{ exercise.goal }}kg</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="workout-list">
+    <h2>Trainingshäufigkeit pro Workout</h2>
+    <canvas ref="chartCanvas"></canvas>
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted, computed, watch } from 'vue'
 import Chart from 'chart.js/auto'
-import { statsApi } from '@/services/statsApi.js'
 
-export default {
-  name: 'WorkoutStats',
-  data() {
-    return {
-      loading: true,
+const workouts = ref([])
+const filteredWorkouts = ref([])
+const selectedDate = ref('')
+const chartCanvas = ref(null)
+let chartInstance = null
 
-      // Echte Daten von API
-      totalWorkouts: 0,
-      currentStreak: 0,
-      totalVolume: 0,
-      favoriteExercise: '',
-      favoriteExerciseShort: '',
+// Workouts aggregieren
+const workoutCounts = computed(() => {
+  const counts = {}
+  workouts.value.forEach((workout) => {
+    const name = workout.workout?.name
+    if (name) counts[name] = (counts[name] || 0) + 1
+  })
+  return counts
+})
 
-      // Wöchentliche Statistiken
-      weeklyStats: {
-        workoutsThisWeek: 0,
-        volumeThisWeek: '0',
-        bestLift: '0kg',
-        progress: '+0kg',
-      },
-
-      // Chart-Daten
-      chartData: {
-        frequency: [],
-        progression: [],
-        distribution: { labels: [], values: [] },
-        volume: [],
-      },
-
-      // Progress Data für die Fortschrittsbalken (statisch)
-      progressData: [
-        {
-          name: 'Bankdrücken',
-          icon: '🏋️',
-          start: 60,
-          current: 85,
-          goal: 100,
-          progress: 71,
-        },
-        {
-          name: 'Kniebeugen',
-          icon: '🦵',
-          start: 80,
-          current: 110,
-          goal: 140,
-          progress: 50,
-        },
-        {
-          name: 'Kreuzheben',
-          icon: '💀',
-          start: 100,
-          current: 140,
-          goal: 180,
-          progress: 50,
-        },
-      ],
-
-      // Chart Instances
-      charts: {},
-    }
-  },
-
-  async mounted() {
-    await this.loadAllData()
-    this.$nextTick(() => {
-      this.initializeCharts()
+const loadWorkouts = () => {
+  fetch('http://localhost:8080/workoutsWithWeights')
+    .then((response) => response.json())
+    .then((data) => {
+      console.log('Geladene Workouts:', JSON.stringify(data, null, 2))
+      workouts.value = data
+      filteredWorkouts.value = data
     })
-  },
+    .catch((error) => console.error('Fehler beim Laden der Workouts:', error))
+}
 
-  beforeUnmount() {
-    // Destroy charts to prevent memory leaks
-    Object.values(this.charts).forEach((chart) => {
-      if (chart) chart.destroy()
+const filterWorkoutsByDate = () => {
+  if (selectedDate.value) {
+    filteredWorkouts.value = workouts.value.filter(
+      (workout) =>
+        new Date(workout.date).toLocaleDateString('de-DE') ===
+        new Date(selectedDate.value).toLocaleDateString('de-DE'),
+    )
+  } else {
+    filteredWorkouts.value = workouts.value
+  }
+}
+
+onMounted(() => {
+  loadWorkouts()
+  watch(workouts, () => createChart(), { immediate: true })
+})
+
+const createChart = () => {
+  if (chartInstance) {
+    chartInstance.destroy()
+  }
+  if (chartCanvas.value) {
+    const ctx = chartCanvas.value.getContext('2d')
+    chartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(workoutCounts.value),
+        datasets: [
+          {
+            label: 'Häufigkeit',
+            data: Object.values(workoutCounts.value),
+            backgroundColor: 'rgba(0, 110, 255, 0.5)',
+          },
+        ],
+      },
     })
-  },
+  }
+}
 
-  methods: {
-    async loadAllData() {
-      try {
-        this.loading = true
+const deleteWorkout = (workoutWithWeightsId) => {
+  console.log('WorkoutWithWeights ID zum Löschen:', workoutWithWeightsId)
 
-        // Lade alle Statistiken von der API
-        const allStats = await statsApi.getAllStats()
-
-        // Update main stats
-        this.totalWorkouts = allStats.summary.totalWorkouts
-        this.currentStreak = allStats.summary.currentStreak
-        this.totalVolume = allStats.summary.totalVolume
-        this.favoriteExercise = allStats.summary.favoriteExercise
-        this.favoriteExerciseShort = allStats.summary.favoriteExerciseShort
-
-        // Update weekly stats
-        this.weeklyStats = allStats.weekly
-
-        // Update chart data
-        this.chartData.frequency = allStats.frequency
-        this.chartData.progression = allStats.progression
-        this.chartData.distribution = allStats.distribution
-        this.chartData.volume = allStats.volume
-
-        console.log('Loaded stats:', allStats)
-      } catch (error) {
-        console.error('Error loading stats:', error)
-        // Bei Fehler bleiben Dummy-Werte
-      } finally {
-        this.loading = false
+  fetch(`http://localhost:8080/workoutWithWeights/${workoutWithWeightsId}`)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error('Fehler beim Abrufen des WorkoutWithWeights')
       }
-    },
+      return response.json()
+    })
+    .then((workoutWithWeights) => {
+      const workoutId = workoutWithWeights.workout.id
+      console.log('Workout ID:', workoutId)
 
-    initializeCharts() {
-      this.createWorkoutFrequencyChart()
-      this.createWeightProgressChart()
-      this.createExerciseDistributionChart()
-      this.createVolumeChart()
-    },
+      return fetch(`http://localhost:8080/workoutWithWeights/${workoutWithWeightsId}`, {
+        method: 'DELETE',
+      }).then((response) => {
+        if (!response.ok) {
+          throw new Error('Fehler beim Löschen des WorkoutWithWeights')
+        }
+        console.log(`WorkoutWithWeights mit ID ${workoutWithWeightsId} gelöscht`)
 
-    createWorkoutFrequencyChart() {
-      const ctx = this.$refs.workoutFrequencyChart.getContext('2d')
-
-      this.charts.workoutFrequency = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
-          datasets: [
-            {
-              label: 'Workouts pro Tag',
-              data: this.chartData.frequency,
-              borderColor: '#4f46e5',
-              backgroundColor: 'rgba(79, 70, 229, 0.1)',
-              fill: true,
-              tension: 0.4,
-              pointBackgroundColor: '#4f46e5',
-              pointBorderColor: '#fff',
-              pointBorderWidth: 3,
-              pointRadius: 8,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false,
-            },
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              max: 2,
-              ticks: {
-                stepSize: 1,
-                color: '#374151',
-              },
-              grid: {
-                color: 'rgba(55, 65, 81, 0.2)',
-              },
-            },
-            x: {
-              ticks: {
-                color: '#374151',
-              },
-              grid: {
-                color: 'rgba(55, 65, 81, 0.2)',
-              },
-            },
-          },
-        },
+        return fetch(`http://localhost:8080/workout/${workoutId}`, {
+          method: 'DELETE',
+        })
       })
-    },
+    })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error('Fehler beim Löschen des Workouts')
+      }
+      console.log('Workout erfolgreich gelöscht')
+      loadWorkouts()
+    })
+    .catch((error) => console.error('Fehler beim Löschen des Workouts:', error))
+}
 
-    createWeightProgressChart() {
-      const ctx = this.$refs.weightProgressChart.getContext('2d')
+const duplicateWorkout = async (workoutId) => {
+  try {
+    const response = await fetch(`http://localhost:8080/workoutWithWeights/${workoutId}`)
+    if (!response.ok) {
+      throw new Error(`Fehler beim Abrufen des Workouts: ${response.status}`)
+    }
+    const workoutData = await response.json()
 
-      this.charts.weightProgress = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: ['Woche 1', 'Woche 2', 'Woche 3', 'Woche 4', 'Woche 5', 'Woche 6'],
-          datasets: [
-            {
-              label: 'Bankdrücken (kg)',
-              data: this.chartData.progression,
-              borderColor: '#059669',
-              backgroundColor: 'rgba(5, 150, 105, 0.1)',
-              fill: true,
-              tension: 0.4,
-              pointBackgroundColor: '#059669',
-              pointBorderColor: '#fff',
-              pointBorderWidth: 3,
-              pointRadius: 8,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false,
-            },
-          },
-          scales: {
-            y: {
-              beginAtZero: false,
-              min: 50,
-              ticks: {
-                color: '#374151',
-              },
-              grid: {
-                color: 'rgba(55, 65, 81, 0.2)',
-              },
-            },
-            x: {
-              ticks: {
-                color: '#374151',
-              },
-              grid: {
-                color: 'rgba(55, 65, 81, 0.2)',
-              },
-            },
-          },
-        },
-      })
-    },
+    const newWorkout = {
+      name: workoutData.workout.name,
+      exercise: workoutData.workout.exercise.map((exercise) => ({
+        name: exercise.name,
+        description: exercise.description || 'Keine Beschreibung vorhanden',
+        equipment: exercise.equipment || 'Unbekannt',
+        targetMuscleGroup: exercise.targetMuscleGroup || 'Unbekannt',
+      })),
+      show: false,
+    }
 
-    createExerciseDistributionChart() {
-      const ctx = this.$refs.exerciseDistributionChart.getContext('2d')
+    console.log('Neues Workout:', newWorkout)
 
-      this.charts.exerciseDistribution = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: this.chartData.distribution.labels,
-          datasets: [
-            {
-              data: this.chartData.distribution.values,
-              backgroundColor: ['#4f46e5', '#059669', '#dc2626', '#d97706', '#7c3aed'],
-              borderWidth: 3,
-              borderColor: '#fff',
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                padding: 20,
-                usePointStyle: true,
-                color: '#374151',
-                font: {
-                  size: 13,
-                },
-              },
-            },
-          },
-        },
-      })
-    },
+    const saveWorkoutResponse = await fetch('http://localhost:8080/workout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newWorkout),
+    })
 
-    createVolumeChart() {
-      const ctx = this.$refs.volumeChart.getContext('2d')
+    if (!saveWorkoutResponse.ok) {
+      throw new Error(`Fehler beim Speichern des neuen Workouts: ${saveWorkoutResponse.status}`)
+    }
 
-      this.charts.volume = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['KW 1', 'KW 2', 'KW 3', 'KW 4', 'KW 5', 'KW 6'],
-          datasets: [
-            {
-              label: 'Volumen (t)',
-              data: this.chartData.volume,
-              backgroundColor: 'rgba(79, 70, 229, 0.8)',
-              borderColor: '#4f46e5',
-              borderWidth: 2,
-              borderRadius: 8,
-              borderSkipped: false,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false,
-            },
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                color: '#374151',
-              },
-              grid: {
-                color: 'rgba(55, 65, 81, 0.2)',
-              },
-            },
-            x: {
-              ticks: {
-                color: '#374151',
-              },
-              grid: {
-                color: 'rgba(55, 65, 81, 0.2)',
-              },
-            },
-          },
-        },
-      })
-    },
-  },
+    const savedWorkout = await saveWorkoutResponse.json()
+
+    const newWorkoutWithWeights = {
+      ...workoutData,
+      id: undefined,
+      workout: savedWorkout,
+      date: new Date().toISOString(),
+      weights: workoutData.weights.map((weight) => ({
+        reps: [...weight.reps],
+        weights: [...weight.weights],
+      })),
+    }
+
+    const saveWorkoutWithWeightsResponse = await fetch('http://localhost:8080/OneWorkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newWorkoutWithWeights),
+    })
+
+    if (!saveWorkoutWithWeightsResponse.ok) {
+      throw new Error(
+        `Fehler beim Speichern des neuen WorkoutWithWeights: ${saveWorkoutWithWeightsResponse.status}`,
+      )
+    }
+
+    alert('Workout und WorkoutWithWeights erfolgreich dupliziert')
+    loadWorkouts()
+  } catch (error) {
+    console.error('Fehler beim Duplizieren des Workouts:', error)
+    alert('Fehler beim Duplizieren des Workouts')
+  }
+}
+
+const maxSets = (weights) => {
+  return Math.max(...weights.map((weight) => weight.reps.length), 0)
+}
+
+const isSetDefined = (weights, setIndex) => {
+  return weights.some(
+    (weight) => weight.reps[setIndex] !== undefined && weight.weights[setIndex] !== undefined,
+  )
 }
 </script>
 
 <style scoped>
-/* Loading State */
-.loading-container {
+.workout-list {
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.filter-section {
+  margin-bottom: 1rem;
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-section label {
+  margin-right: 0.5rem;
+}
+
+.filter-section input {
+  padding: 0.5rem;
+  border-radius: 30px;
+  border: none;
+  background-color: rgb(0, 110, 255);
+}
+
+.table {
+  margin-bottom: 1rem;
+  padding: 0.9rem 0.5rem 0.01px 0.5rem;
+  border-radius: 30px;
+  background-color: transparent;
+  text-align: center;
+  width: 100%;
+}
+
+.styled-table {
+  width: 100%;
+  border-collapse: separate;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  border-radius: 20px;
+  table-layout: fixed;
+  min-width: 100%;
+}
+
+.styled-table th,
+.styled-table td {
+  padding: 8px;
+  text-align: left;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.styled-table th {
+  background-color: #1e1e1e;
+  color: rgb(0, 110, 255);
+  text-align: left;
+  position: sticky;
+  top: 0;
+}
+
+.styled-table tr:nth-child(even) {
+  background-color: #2b2b2b;
+}
+
+.styled-table tr:nth-child(odd) {
+  background-color: #1e1e1e;
+}
+
+.styled-table th:first-child {
+  border-top-left-radius: 12px;
+}
+
+.styled-table th:last-child {
+  border-top-right-radius: 12px;
+}
+
+.styled-table th:first-child {
+  border-top-left-radius: 20px;
+}
+
+.styled-table th:last-child {
+  border-top-right-radius: 20px;
+}
+
+.styled-table tr:last-child td:last-child {
+  border-bottom-right-radius: 20px;
+}
+
+.styled-table tr:last-child td:first-child {
+  border-bottom-left-radius: 20px;
+}
+
+.no-workouts {
+  color: #888;
+  margin-top: 1rem;
+}
+
+.delete-button,
+.edit-button,
+.duplicate-button {
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 30px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  color: #6b7280;
 }
 
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #e5e7eb;
-  border-top: 4px solid #4f46e5;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20px;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.stats-dashboard {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 25px;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #cbd5e1 100%);
-  border-radius: 25px;
-  color: #1f2937;
-  min-height: 100vh;
-  box-shadow:
-    0 10px 40px rgba(0, 0, 0, 0.1),
-    0 4px 20px rgba(0, 0, 0, 0.06);
-  position: relative;
-  overflow: hidden;
-}
-
-.stats-dashboard::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(79, 70, 229, 0.03) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.dashboard-header {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.dashboard-header h1 {
-  font-size: 2.8em;
-  margin: 0 0 15px 0;
-  font-weight: 800;
-  background: linear-gradient(135deg, #4f46e5, #059669);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -0.02em;
-}
-
-.subtitle {
-  font-size: 1.3em;
-  color: #6b7280;
-  margin: 0;
-  font-weight: 500;
-}
-
-/* Stats Cards */
-.stats-cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 25px;
-  margin-bottom: 35px;
-}
-
-@media (max-width: 1100px) {
-  .stats-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
-  .stats-cards {
-    grid-template-columns: 1fr;
-  }
-}
-
-.stat-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border: 1px solid rgba(79, 70, 229, 0.1);
-  border-radius: 20px;
-  padding: 28px;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  transition: all 0.4s ease;
-  box-shadow:
-    0 4px 15px rgba(0, 0, 0, 0.08),
-    0 2px 8px rgba(0, 0, 0, 0.04);
-  min-height: 120px;
-  position: relative;
-  overflow: hidden;
-}
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(5, 150, 105, 0.05));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-6px);
-  box-shadow:
-    0 20px 40px rgba(79, 70, 229, 0.15),
-    0 8px 25px rgba(0, 0, 0, 0.12);
-  border-color: rgba(79, 70, 229, 0.2);
-}
-
-.stat-card:hover::before {
-  opacity: 1;
-}
-
-.stat-icon {
-  font-size: 3.2em;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
-  flex-shrink: 0;
-  position: relative;
-  z-index: 2;
-}
-
-.stat-content {
-  flex: 1;
-  min-width: 0;
-  position: relative;
-  z-index: 2;
-}
-
-.stat-content h3 {
-  margin: 0 0 6px 0;
-  font-size: 2.2em;
-  font-weight: 700;
-  color: #1f2937;
-  line-height: 1;
-  word-break: break-word;
-}
-
-.stat-content p {
-  margin: 0;
-  color: #6b7280;
-  font-size: 0.95em;
-  font-weight: 500;
-  word-break: break-word;
-}
-
-/* Charts Section */
-.charts-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-  gap: 30px;
-  margin-bottom: 45px;
-}
-
-.chart-container {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border: 1px solid rgba(79, 70, 229, 0.1);
-  border-radius: 20px;
-  padding: 30px;
-  height: 420px;
-  box-shadow:
-    0 4px 15px rgba(0, 0, 0, 0.08),
-    0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.chart-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.02), rgba(5, 150, 105, 0.02));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.chart-container:hover {
-  box-shadow:
-    0 15px 35px rgba(79, 70, 229, 0.1),
-    0 8px 25px rgba(0, 0, 0, 0.12);
-  transform: translateY(-2px);
-}
-
-.chart-container:hover::before {
-  opacity: 1;
-}
-
-.chart-container h2 {
-  margin: 0 0 25px 0;
-  font-size: 1.4em;
-  text-align: center;
-  color: #1f2937;
-  font-weight: 600;
-  position: relative;
-  z-index: 2;
-}
-
-.chart-container canvas {
-  max-height: 320px !important;
-  position: relative;
-  z-index: 2;
-}
-
-/* Progress Section */
-.progress-section {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 35px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-.progress-section h2 {
-  margin: 0 0 30px 0;
-  text-align: center;
-  font-size: 1.6em;
-  color: #1f2937;
-  font-weight: 600;
-}
-
-.progress-items {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-}
-
-.progress-item {
-  background: #f9fafb;
-  border-radius: 12px;
-  padding: 25px;
-  border: 1px solid #f3f4f6;
-}
-
-.progress-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.exercise-name {
-  font-weight: 600;
-  font-size: 1.15em;
-  color: #1f2937;
-}
-
-.progress-value {
-  font-weight: 700;
-  font-size: 1.3em;
-  color: #4f46e5;
-}
-
-.progress-bar {
-  background: #e5e7eb;
-  height: 10px;
-  border-radius: 5px;
-  overflow: hidden;
-  margin-bottom: 10px;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #4f46e5, #059669);
-  transition: width 1s ease;
-  border-radius: 5px;
-}
-
-.progress-info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.9em;
-  color: #6b7280;
-  font-weight: 500;
-}
-
-/* Weekly Summary - Cooler Design */
-.weekly-summary {
-  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
-  border-radius: 20px;
-  padding: 30px;
+.delete-button {
+  background-color: #ff4d4d;
   color: white;
-  margin-bottom: 35px;
-  position: relative;
-  overflow: hidden;
 }
 
-.weekly-summary::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(79, 70, 229, 0.1), rgba(5, 150, 105, 0.1));
-  pointer-events: none;
+.delete-button:hover {
+  background-color: #ff1a1a;
 }
 
-.weekly-summary h2 {
-  margin: 0 0 25px 0;
-  text-align: center;
-  font-size: 1.6em;
-  font-weight: 700;
-  position: relative;
-  z-index: 1;
+.edit-button {
+  margin-left: 3px;
+  background-color: #4d56ff;
+  color: white;
+  font-size: smaller;
 }
 
-.week-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 20px;
-  position: relative;
-  z-index: 1;
+.edit-button:hover {
+  background-color: rgb(0, 110, 255);
 }
 
-.week-stat {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  transition: all 0.3s ease;
+.duplicate-button {
+  margin-left: 3px;
+  background-color: #4d56ff;
+  color: white;
+  font-size: smaller;
 }
 
-.week-stat:hover {
-  transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+.duplicate-button:hover {
+  background-color: rgb(0, 110, 255);
 }
 
-.week-icon {
-  font-size: 2.2em;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-.week-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.week-value {
-  font-size: 1.5em;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.week-label {
-  font-size: 0.9em;
-  opacity: 0.9;
-  font-weight: 500;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .stats-dashboard {
-    padding: 20px;
-    margin: 15px;
+@media (max-width: 900px) {
+  .workout-list {
+    padding: 0 10px;
+    max-height: 100vh;
+    overflow-y: auto;
   }
 
-  .charts-section {
-    grid-template-columns: 1fr;
-    gap: 25px;
+  h3 {
+    font-size: 0.95rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
   }
 
-  .chart-container {
-    height: 380px;
-    padding: 25px;
+  .delete-button,
+  .edit-button,
+  .duplicate-button {
+    padding: 4px 8px;
   }
 
-  .stat-card {
-    padding: 25px;
+  .table {
+    width: 100%;
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
   }
 
-  .dashboard-header h1 {
-    font-size: 2.2em;
+  .styled-table {
+    font-size: 0.85rem;
+    width: max-content;
+    min-width: 100%;
+    display: table;
+    white-space: nowrap;
+    table-layout: fixed;
   }
 
-  .week-stats {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 15px;
+  .styled-table th:first-child,
+  .styled-table td:first-child {
+    min-width: 140px;
+    max-width: 25%;
   }
 
-  .week-stat {
-    padding: 15px;
-    gap: 12px;
+  .styled-table th:not(:first-child),
+  .styled-table td:not(:first-child) {
+    width: auto;
   }
 
-  .week-icon {
-    font-size: 1.8em;
+  .styled-table th,
+  .styled-table td {
+    padding: 6px;
+  }
+}
+
+@media (max-width: 574px) {
+  .workout-list {
+    margin: 0;
+    padding: 0;
   }
 
-  .week-value {
-    font-size: 1.3em;
+  .styled-table {
+    font-size: 0.8rem;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .styled-table th,
+  .styled-table td {
+    padding: 4px 2px;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  h3 {
+    font-size: 0.9rem;
+  }
+
+  .styled-table {
+    font-size: 0.8rem;
+    table-layout: auto;
+  }
+
+  .styled-table th:first-child,
+  .styled-table td:first-child {
+    min-width: 100px;
+  }
+
+  .styled-table th,
+  .styled-table td {
+    padding: 4px;
   }
 }
 </style>

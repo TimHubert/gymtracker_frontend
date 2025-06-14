@@ -372,26 +372,15 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 25px;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #cbd5e1 100%);
   border-radius: 25px;
   color: #1f2937;
   min-height: 100vh;
-  box-shadow:
-    0 10px 40px rgba(0, 0, 0, 0.1),
-    0 4px 20px rgba(0, 0, 0, 0.06);
   position: relative;
   overflow: hidden;
 }
 
 .stats-dashboard::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(79, 70, 229, 0.03) 0%, transparent 70%);
-  pointer-events: none;
+  display: none;
 }
 
 .dashboard-header {

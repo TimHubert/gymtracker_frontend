@@ -59,6 +59,7 @@ export default {
 .stats-page {
   width: 100%;
   min-height: 100vh;
+  padding: 20px;
 }
 
 /* Tab Navigation */
@@ -66,17 +67,15 @@ export default {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
-  background: rgba(255, 255, 255, 0.1);
   padding: 10px;
   border-radius: 15px;
-  backdrop-filter: blur(10px);
 }
 
 .tab-button {
   flex: 1;
   padding: 12px 20px;
   border: none;
-  border-radius: 10px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.1);
   color: white;
   font-weight: 600;
@@ -91,8 +90,8 @@ export default {
 }
 
 .tab-button.active {
-  background: linear-gradient(45deg, #667eea, #764ba2);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+  background: linear-gradient(45deg, #1e90ff, #006eff);
+  box-shadow: 0 5px 15px rgba(30, 144, 255, 0.3);
 }
 
 /* Tab Content */
@@ -100,15 +99,9 @@ export default {
   width: 100%;
 }
 
-.charts-tab {
-  /* WorkoutStats hat eigene Styles */
-}
-
 .workouts-tab {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
   border-radius: 20px;
-  padding: 30px;
+  padding: 20px;
   color: white;
 }
 
@@ -121,7 +114,7 @@ export default {
   font-size: 2.2em;
   margin: 0 0 10px 0;
   font-weight: bold;
-  background: linear-gradient(45deg, #667eea, #764ba2);
+  background: linear-gradient(45deg, #1e90ff, #006eff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -146,11 +139,25 @@ export default {
   }
 
   .workouts-tab {
-    padding: 20px;
+    padding: 15px;
   }
 
   .workouts-header h2 {
     font-size: 1.8em;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-page {
+    padding: 10px;
+  }
+
+  .workouts-header h2 {
+    font-size: 1.5em;
+  }
+
+  .workouts-header p {
+    font-size: 0.9em;
   }
 }
 </style>
