@@ -1,7 +1,38 @@
 <template>
   <div class="workout-list">
-    <h2>Trainingshäufigkeit pro Workout</h2>
-    <canvas ref="chartCanvas"></canvas>
+    <div class="stat-box">
+      <h2>Trainingshäufigkeit pro Workout</h2>
+      <canvas ref="chartCanvas"></canvas>
+    </div>
+
+    <div class="emoji-box">🏋️ Insgesamt absolvierte Workouts: {{ totalWorkouts }}</div>
+
+    <div class="stat-box">
+      <h2>Übungsstatistik</h2>
+      <canvas ref="exerciseChartCanvas"></canvas>
+    </div>
+
+    <div class="stat-box">
+      <h2>Fortschritt über Zeit</h2>
+      <div class="filter-section">
+        <label for="exercise-select">Übung auswählen:</label>
+        <select id="exercise-select" v-model="selectedExercise" @change="createProgressChart">
+          <option value="">Alle Übungen</option>
+          <option v-for="exercise in availableExercises" :key="exercise" :value="exercise">
+            {{ exercise }}
+          </option>
+        </select>
+
+        <label for="set-select">Satz auswählen:</label>
+        <select id="set-select" v-model="selectedSet" @change="createProgressChart">
+          <option value="max">Maximales Gewicht</option>
+          <option v-for="setNum in maxAvailableSets" :key="setNum" :value="setNum">
+            Satz {{ setNum }}
+          </option>
+        </select>
+      </div>
+      <canvas ref="progressChartCanvas"></canvas>
+    </div>
   </div>
 </template>
 
@@ -13,7 +44,13 @@ const workouts = ref([])
 const filteredWorkouts = ref([])
 const selectedDate = ref('')
 const chartCanvas = ref(null)
+const exerciseChartCanvas = ref(null)
+const progressChartCanvas = ref(null)
+const selectedExercise = ref('')
+const selectedSet = ref('max') // Standardmäßig maximales Gewicht anzeigen
 let chartInstance = null
+let exerciseChartInstance = null
+let progressChartInstance = null
 
 // Workouts aggregieren
 const workoutCounts = computed(() => {
@@ -24,6 +61,8 @@ const workoutCounts = computed(() => {
   })
   return counts
 })
+
+const totalWorkouts = computed(() => workouts.value.length)
 
 const loadWorkouts = () => {
   fetch('http://localhost:8080/workoutsWithWeights')
@@ -50,7 +89,16 @@ const filterWorkoutsByDate = () => {
 
 onMounted(() => {
   loadWorkouts()
-  watch(workouts, () => createChart(), { immediate: true })
+  watch(
+    workouts,
+    () => {
+      createChart()
+      createProgressChart()
+    },
+    { immediate: true },
+  )
+  watch(filteredWorkouts, createExerciseChart, { immediate: true })
+  watch([selectedExercise, selectedSet], createProgressChart)
 })
 
 const createChart = () => {
@@ -67,12 +115,366 @@ const createChart = () => {
           {
             label: 'Häufigkeit',
             data: Object.values(workoutCounts.value),
-            backgroundColor: 'rgba(0, 110, 255, 0.5)',
+            backgroundColor: 'rgba(0, 110, 255, 1)',
+            borderWidth: 0,
+            borderColor: 'transparent',
           },
         ],
       },
+      options: {
+        plugins: {
+          legend: {
+            labels: {
+              font: {
+                family: 'Montserrat',
+              },
+            },
+          },
+        },
+        scales: {
+          x: {
+            ticks: {
+              font: {
+                family: 'Montserrat',
+              },
+              color: '#fff',
+            },
+            grid: {
+              display: false,
+            },
+          },
+          y: {
+            ticks: {
+              font: {
+                family: 'Montserrat',
+              },
+              color: '#fff',
+            },
+            grid: {
+              display: false,
+            },
+          },
+        },
+      },
+      plugins: [stripesPlugin],
+    })
+    chartInstance.data.datasets[0].borderRadius = { topLeft: 20, topRight: 20 }
+    chartInstance.data.datasets[0].borderSkipped = false
+    chartInstance.update()
+  }
+}
+
+const exerciseDistribution = computed(() => {
+  const distribution = {}
+  filteredWorkouts.value.forEach((workout) => {
+    workout.workout?.exercise.forEach((ex) => {
+      distribution[ex.name] = (distribution[ex.name] || 0) + 1
+    })
+  })
+  return distribution
+})
+
+const createExerciseChart = () => {
+  if (exerciseChartInstance) {
+    exerciseChartInstance.destroy()
+  }
+  if (exerciseChartCanvas.value) {
+    const ctx = exerciseChartCanvas.value.getContext('2d')
+    exerciseChartInstance = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: Object.keys(exerciseDistribution.value),
+        datasets: [
+          {
+            data: Object.values(exerciseDistribution.value),
+            backgroundColor: [
+              'rgba(0, 110, 255, 1)',
+              'rgba(255, 99, 132, 1)',
+              'rgba(75, 192, 192, 1)',
+              // ...existing or additional colors...
+            ],
+            borderWidth: 0,
+            borderColor: 'transparent',
+          },
+        ],
+      },
+      options: {
+        plugins: {
+          legend: {
+            labels: {
+              font: {
+                family: 'Montserrat',
+              },
+            },
+          },
+        },
+      },
     })
   }
+}
+
+// Liste aller verfügbaren Übungen
+const availableExercises = computed(() => {
+  const exercises = new Set()
+  workouts.value.forEach((workout) => {
+    workout.workout?.exercise.forEach((ex) => {
+      exercises.add(ex.name)
+    })
+  })
+  return Array.from(exercises).sort()
+})
+
+// Bestimmen der maximalen Anzahl verfügbarer Sätze für die ausgewählte Übung
+const maxAvailableSets = computed(() => {
+  if (!selectedExercise.value) {
+    // Wenn keine Übung ausgewählt ist, finde die maximale Satzanzahl für alle Übungen
+    let maxSets = 0
+
+    workouts.value.forEach((workout) => {
+      workout.weights?.forEach((weight) => {
+        const setCount = weight.weights?.length || 0
+        maxSets = Math.max(maxSets, setCount)
+      })
+    })
+
+    return Array.from({ length: maxSets }, (_, i) => i + 1)
+  } else {
+    // Wenn eine Übung ausgewählt ist, finde die maximale Satzanzahl für diese Übung
+    let maxSets = 0
+
+    workouts.value.forEach((workout) => {
+      const exerciseIndex = workout.workout?.exercise.findIndex(
+        (ex) => ex.name === selectedExercise.value,
+      )
+      if (exerciseIndex !== -1 && workout.weights[exerciseIndex]) {
+        const setCount = workout.weights[exerciseIndex].weights?.length || 0
+        maxSets = Math.max(maxSets, setCount)
+      }
+    })
+
+    return Array.from({ length: maxSets }, (_, i) => i + 1)
+  }
+})
+
+// Daten für das Fortschrittsdiagramm
+const exerciseProgressData = computed(() => {
+  // Wenn keine Übung ausgewählt ist, Daten für alle Übungen sammeln
+  if (!selectedExercise.value) {
+    // Max. 5 Übungen darstellen um Übersichtlichkeit zu wahren
+    const topExercises = availableExercises.value.slice(0, 5)
+
+    // Erstelle Datensätze für jede der Top-Übungen
+    return topExercises
+      .map((exercise) => {
+        // Sammle alle Workouts mit dieser Übung
+        const relevantWorkouts = workouts.value.filter((workout) =>
+          workout.workout?.exercise.some((ex) => ex.name === exercise),
+        )
+
+        // Sortiere nach Datum
+        relevantWorkouts.sort((a, b) => new Date(a.date) - new Date(b.date))
+
+        // Für jedes Workout extrahiere das Gewicht gemäß Satzauswahl
+        const progressPoints = relevantWorkouts
+          .map((workout) => {
+            const date = new Date(workout.date).toLocaleDateString('de-DE')
+
+            // Finde den Index der Übung
+            const exerciseIndex = workout.workout.exercise.findIndex((ex) => ex.name === exercise)
+
+            if (exerciseIndex !== -1 && workout.weights[exerciseIndex]) {
+              const weights = workout.weights[exerciseIndex].weights.filter((w) => w > 0)
+
+              // Je nach Satzauswahl das entsprechende Gewicht ermitteln
+              let selectedWeight = 0
+
+              if (selectedSet.value === 'max') {
+                // Maximales Gewicht aus allen Sätzen
+                selectedWeight = weights.length > 0 ? Math.max(...weights) : 0
+              } else {
+                // Gewicht des ausgewählten Satzes (falls vorhanden)
+                const setIndex = parseInt(selectedSet.value) - 1
+                selectedWeight = setIndex >= 0 && setIndex < weights.length ? weights[setIndex] : 0
+              }
+
+              return {
+                date,
+                weight: selectedWeight,
+              }
+            }
+
+            return { date, weight: 0 }
+          })
+          .filter((item) => item.weight > 0)
+
+        return {
+          exercise,
+          data: progressPoints,
+        }
+      })
+      .filter((dataset) => dataset.data.length > 0)
+  }
+
+  // Wenn eine spezifische Übung ausgewählt ist
+  const relevantWorkouts = workouts.value.filter((workout) =>
+    workout.workout?.exercise.some((ex) => ex.name === selectedExercise.value),
+  )
+
+  relevantWorkouts.sort((a, b) => new Date(a.date) - new Date(b.date))
+
+  const data = relevantWorkouts
+    .map((workout) => {
+      const date = new Date(workout.date).toLocaleDateString('de-DE')
+
+      const exerciseIndex = workout.workout.exercise.findIndex(
+        (ex) => ex.name === selectedExercise.value,
+      )
+
+      if (exerciseIndex !== -1 && workout.weights[exerciseIndex]) {
+        const weights = workout.weights[exerciseIndex].weights.filter((w) => w > 0)
+
+        // Je nach Satzauswahl das entsprechende Gewicht ermitteln
+        let selectedWeight = 0
+
+        if (selectedSet.value === 'max') {
+          // Maximales Gewicht aus allen Sätzen
+          selectedWeight = weights.length > 0 ? Math.max(...weights) : 0
+        } else {
+          // Gewicht des ausgewählten Satzes (falls vorhanden)
+          const setIndex = parseInt(selectedSet.value) - 1
+          selectedWeight = setIndex >= 0 && setIndex < weights.length ? weights[setIndex] : 0
+        }
+
+        return {
+          date,
+          weight: selectedWeight,
+        }
+      }
+
+      return { date, weight: 0 }
+    })
+    .filter((item) => item.weight > 0)
+
+  return [
+    {
+      exercise: selectedExercise.value,
+      data: data,
+    },
+  ]
+})
+
+const createProgressChart = () => {
+  if (progressChartInstance) {
+    progressChartInstance.destroy()
+  }
+
+  if (!progressChartCanvas.value) return
+
+  const progressData = exerciseProgressData.value
+
+  if (progressData.length === 0) return
+
+  // Farbpalette für mehrere Übungen
+  const colors = [
+    'rgb(0, 110, 255)', // Blau
+    'rgb(255, 99, 132)', // Rosa
+    'rgb(75, 192, 192)', // Türkis
+    'rgb(255, 159, 64)', // Orange
+    'rgb(153, 102, 255)', // Lila
+  ]
+
+  // Sammle alle eindeutigen Daten über alle Übungen
+  const allDates = new Set()
+  progressData.forEach((dataset) => {
+    dataset.data.forEach((point) => {
+      allDates.add(point.date)
+    })
+  })
+
+  // Sortiere die Daten chronologisch
+  const sortedDates = Array.from(allDates).sort((a, b) => {
+    return new Date(a.split('.').reverse().join('-')) - new Date(b.split('.').reverse().join('-'))
+  })
+
+  // Erstelle die Datensätze für das Chart
+  const datasets = progressData.map((dataset, index) => {
+    const color = colors[index % colors.length]
+    const setLabel = selectedSet.value === 'max' ? 'Max Gewicht' : `Satz ${selectedSet.value}`
+
+    return {
+      label: `${dataset.exercise} (${setLabel})`,
+      data: dataset.data.map((point) => ({
+        x: point.date,
+        y: point.weight,
+      })),
+      borderColor: color,
+      backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.1)'),
+      borderWidth: 2,
+      tension: 0.2,
+      fill: false,
+      pointBackgroundColor: '#fff',
+      pointBorderColor: color,
+      pointRadius: 5,
+      pointHoverRadius: 7,
+    }
+  })
+
+  const ctx = progressChartCanvas.value.getContext('2d')
+  progressChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: sortedDates,
+      datasets: datasets,
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: {
+            font: {
+              family: 'Montserrat',
+            },
+            color: '#fff',
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              return `${context.dataset.label}: ${context.raw.y} kg`
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: {
+            font: {
+              family: 'Montserrat',
+            },
+            color: '#fff',
+          },
+          grid: {
+            display: false,
+          },
+        },
+        y: {
+          ticks: {
+            font: {
+              family: 'Montserrat',
+            },
+            color: '#fff',
+          },
+          grid: {
+            display: true,
+            color: 'rgba(255, 255, 255, 0.1)',
+          },
+          beginAtZero: true,
+        },
+      },
+    },
+  })
 }
 
 const deleteWorkout = (workoutWithWeightsId) => {
@@ -185,6 +587,27 @@ const isSetDefined = (weights, setIndex) => {
     (weight) => weight.reps[setIndex] !== undefined && weight.weights[setIndex] !== undefined,
   )
 }
+
+const stripesPlugin = {
+  id: 'stripesPlugin',
+  beforeDraw(chart) {
+    const {
+      ctx,
+      chartArea: { left, right },
+    } = chart
+    const scale = chart.scales.y
+    const minVal = Math.floor(scale.min)
+    const maxVal = Math.ceil(scale.max)
+    ctx.save()
+    for (let i = minVal; i < maxVal; i++) {
+      const y1 = scale.getPixelForValue(i)
+      const y2 = scale.getPixelForValue(i + 1)
+      ctx.fillStyle = i % 2 === 0 ? 'rgba(204, 204, 204, 0.2)' : 'transparent'
+      ctx.fillRect(left, Math.min(y1, y2), right - left, Math.abs(y2 - y1))
+    }
+    ctx.restore()
+  },
+}
 </script>
 
 <style scoped>
@@ -195,23 +618,36 @@ const isSetDefined = (weights, setIndex) => {
   overflow-x: hidden;
 }
 
+canvas {
+  outline: none;
+  border: none;
+}
+
 .filter-section {
   margin-bottom: 1rem;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.8rem;
 }
 
 .filter-section label {
-  margin-right: 0.5rem;
+  margin-right: 0.25rem;
+  color: #fff;
 }
 
-.filter-section input {
+.filter-section select {
   padding: 0.5rem;
   border-radius: 30px;
   border: none;
   background-color: rgb(0, 110, 255);
+  color: white;
+  cursor: pointer;
+}
+
+.filter-section select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 110, 255, 0.5);
 }
 
 .table {
@@ -331,6 +767,33 @@ const isSetDefined = (weights, setIndex) => {
   background-color: rgb(0, 110, 255);
 }
 
+.emoji-box {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 10px;
+  background-color: #2b2b2b;
+  color: #fff;
+  text-align: center;
+}
+
+.stat-box {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  border-radius: 15px;
+  background-color: #2b2b2b;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.stat-box h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: rgb(0, 110, 255);
+}
+
+.stat-box canvas {
+  margin-top: 1rem;
+}
+
 @media (max-width: 900px) {
   .workout-list {
     padding: 0 10px;
@@ -383,6 +846,10 @@ const isSetDefined = (weights, setIndex) => {
   .styled-table td {
     padding: 6px;
   }
+
+  .stat-box {
+    padding: 1rem;
+  }
 }
 
 @media (max-width: 574px) {
@@ -404,12 +871,26 @@ const isSetDefined = (weights, setIndex) => {
     padding: 4px 2px;
     font-size: 0.75rem;
   }
+
+  .stat-box {
+    padding: 0.75rem;
+  }
 }
 
 @media (max-width: 480px) {
   .filter-section {
     flex-direction: column;
     align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .filter-section label {
+    margin-bottom: 0.25rem;
+  }
+
+  .filter-section select {
+    width: 100%;
+    margin-bottom: 0.5rem;
   }
 
   h3 {
