@@ -66,21 +66,29 @@ const router = createRouter({
 })
 
 // Router Guards für Authentifizierung
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
   
   // Authentifizierung initialisieren wenn noch nicht geschehen
   if (authStore.token && !authStore.user) {
-    authStore.initializeAuth()
+    try {
+      await authStore.getCurrentUser()
+    } catch (error) {
+      console.error('Fehler beim Laden des Benutzers:', error)
+      authStore.logout()
+    }
   }
   
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const requiresGuest = to.matched.some(record => record.meta.requiresGuest)
   
-  if (requiresAuth && !authStore.isAuthenticated) {
+  // Prüfe nur auf Token für Authentifizierung, da user asynchron geladen wird
+  const isAuthenticated = !!authStore.token
+  
+  if (requiresAuth && !isAuthenticated) {
     // Benutzer ist nicht authentifiziert, leite zu Login weiter
     next('/login')
-  } else if (requiresGuest && authStore.isAuthenticated) {
+  } else if (requiresGuest && isAuthenticated) {
     // Benutzer ist bereits angemeldet, leite zur Startseite weiter
     next('/')
   } else {

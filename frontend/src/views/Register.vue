@@ -28,30 +28,6 @@
           />
         </div>
         
-        <div class="form-row">
-          <div class="form-group">
-            <label for="firstName">Vorname:</label>
-            <input
-              id="firstName"
-              v-model="registerData.firstName"
-              type="text"
-              :disabled="authStore.isLoading"
-              placeholder="Vorname"
-            />
-          </div>
-          
-          <div class="form-group">
-            <label for="lastName">Nachname:</label>
-            <input
-              id="lastName"
-              v-model="registerData.lastName"
-              type="text"
-              :disabled="authStore.isLoading"
-              placeholder="Nachname"
-            />
-          </div>
-        </div>
-        
         <div class="form-group">
           <label for="password">Passwort:</label>
           <input
@@ -114,9 +90,7 @@ const authStore = useAuthStore()
 const registerData = ref({
   username: '',
   email: '',
-  password: '',
-  firstName: '',
-  lastName: ''
+  password: ''
 })
 
 const confirmPassword = ref('')
@@ -169,15 +143,6 @@ h2 {
   color: white;
   margin-bottom: 30px;
   font-size: 1.8em;
-}
-
-.form-row {
-  display: flex;
-  gap: 15px;
-}
-
-.form-row .form-group {
-  flex: 1;
 }
 
 .form-group {
@@ -276,11 +241,6 @@ input:disabled {
   .register-form {
     padding: 30px 20px;
     margin: 10px;
-  }
-  
-  .form-row {
-    flex-direction: column;
-    gap: 0;
   }
   
   h2 {

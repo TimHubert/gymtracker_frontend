@@ -5,8 +5,6 @@ interface User {
   id: number
   username: string
   email: string
-  firstName?: string
-  lastName?: string
 }
 
 interface LoginCredentials {
@@ -18,8 +16,6 @@ interface RegisterData {
   username: string
   email: string
   password: string
-  firstName?: string
-  lastName?: string
 }
 
 export const useAuthStore = defineStore('auth', {

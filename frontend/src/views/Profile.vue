@@ -4,10 +4,8 @@
       <h2>👤 Mein Profil</h2>
       
       <div v-if="authStore.user" class="profile-info">
-        <div class="user-avatar">
-          <div class="avatar-circle">
-            {{ authStore.user.username.charAt(0).toUpperCase() }}
-          </div>
+        <div class="user-header">
+          <h3 class="username-display">{{ authStore.user.username }}</h3>
         </div>
         
         <form @submit.prevent="handleUpdateProfile">
@@ -31,28 +29,6 @@
               required
               :disabled="authStore.isLoading"
             />
-          </div>
-          
-          <div class="form-row">
-            <div class="form-group">
-              <label for="firstName">Vorname:</label>
-              <input
-                id="firstName"
-                v-model="profileData.firstName"
-                type="text"
-                :disabled="authStore.isLoading"
-              />
-            </div>
-            
-            <div class="form-group">
-              <label for="lastName">Nachname:</label>
-              <input
-                id="lastName"
-                v-model="profileData.lastName"
-                type="text"
-                :disabled="authStore.isLoading"
-              />
-            </div>
           </div>
           
           <div v-if="authStore.error" class="error-message">
@@ -96,9 +72,7 @@ const authStore = useAuthStore()
 
 const profileData = ref({
   username: '',
-  email: '',
-  firstName: '',
-  lastName: ''
+  email: ''
 })
 
 const successMessage = ref('')
@@ -108,9 +82,7 @@ const hasChanges = computed(() => {
   
   return (
     profileData.value.username !== authStore.user.username ||
-    profileData.value.email !== authStore.user.email ||
-    profileData.value.firstName !== (authStore.user.firstName || '') ||
-    profileData.value.lastName !== (authStore.user.lastName || '')
+    profileData.value.email !== authStore.user.email
   )
 })
 
@@ -118,9 +90,7 @@ const loadProfileData = () => {
   if (authStore.user) {
     profileData.value = {
       username: authStore.user.username,
-      email: authStore.user.email,
-      firstName: authStore.user.firstName || '',
-      lastName: authStore.user.lastName || ''
+      email: authStore.user.email
     }
   }
 }
@@ -132,9 +102,12 @@ const handleUpdateProfile = async () => {
   const result = await authStore.updateProfile(profileData.value)
   
   if (result.success) {
-    successMessage.value = 'Profil erfolgreich aktualisiert!'
-    setTimeout(() => {
-      successMessage.value = ''
+    successMessage.value = 'Profil erfolgreich aktualisiert! Sie werden in 3 Sekunden abgemeldet und müssen sich erneut anmelden.'
+    
+    // Nach 3 Sekunden automatisch abmelden
+    setTimeout(async () => {
+      await authStore.logout()
+      router.push('/login')
     }, 3000)
   }
 }
@@ -179,32 +152,16 @@ h2 {
   font-size: 1.8em;
 }
 
-.user-avatar {
+.user-header {
   display: flex;
   justify-content: center;
   margin-bottom: 30px;
 }
 
-.avatar-circle {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #006eff, #0056cc);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2em;
+.username-display {
+  font-size: 1.5em;
   font-weight: bold;
   color: white;
-}
-
-.form-row {
-  display: flex;
-  gap: 15px;
-}
-
-.form-row .form-group {
-  flex: 1;
 }
 
 .form-group {
@@ -306,11 +263,6 @@ input:disabled {
   .profile-card {
     padding: 30px 20px;
     margin: 10px;
-  }
-  
-  .form-row {
-    flex-direction: column;
-    gap: 0;
   }
   
   .button-group {
