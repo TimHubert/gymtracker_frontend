@@ -84,7 +84,10 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useAuthStore } from '../stores/auth'
+import axios from 'axios'
 
+const authStore = useAuthStore()
 const workouts = ref([])
 const filteredWorkouts = ref([])
 const selectedDate = ref('')
@@ -96,21 +99,30 @@ const findLatestWorkoutDate = (workouts) => {
   return workouts.map((w) => w.date).sort((a, b) => new Date(b) - new Date(a))[0]
 }
 
-const loadWorkouts = () => {
-  fetch('http://localhost:8080/workoutsWithWeights')
-    .then((response) => response.json())
-    .then((data) => {
-      console.log('Geladene Workouts:', JSON.stringify(data, null, 2))
-      workouts.value = data
-      // Setze das letzte Workout-Datum als Standardwert
-      if (!selectedDate.value) {
-        selectedDate.value = findLatestWorkoutDate(data)
-      }
-      applyFilters()
-    })
-    .catch((error) => console.error('Fehler beim Laden der Workouts:', error))
-}
+const loadWorkouts = async () => {
+  try {
+    console.log('AllWorkoutsView: Lade Workouts...')
+    if (!authStore.token) {
+      console.error('AllWorkoutsView: Kein Token verfügbar')
+      return
+    }
 
+    const response = await axios.get('http://localhost:8080/workoutsWithWeights')
+    console.log('AllWorkoutsView: Workouts geladen:', response.data)
+    workouts.value = response.data
+    
+    // Setze das letzte Workout-Datum als Standardwert
+    if (!selectedDate.value) {
+      selectedDate.value = findLatestWorkoutDate(response.data)
+    }
+    applyFilters()
+  } catch (error) {
+    console.error('AllWorkoutsView: Fehler beim Laden der Workouts:', error)
+    if (error.response?.status === 401) {
+      console.error('AllWorkoutsView: Authentifizierung fehlgeschlagen')
+    }
+  }
+}
 
 const uniqueWorkoutNames = computed(() => {
   const names = new Set(workouts.value.map((w) => w.workout.name))
@@ -150,51 +162,41 @@ onMounted(() => {
 })
 
 // Workout löschen
-const deleteWorkout = (workoutWithWeightsId) => {
-  console.log('WorkoutWithWeights ID zum Löschen:', workoutWithWeightsId)
+const deleteWorkout = async (workoutWithWeightsId) => {
+  try {
+    console.log('AllWorkoutsView: Lösche Workout:', workoutWithWeightsId)
+    
+    // Erst WorkoutWithWeights abrufen um Workout ID zu bekommen
+    const workoutResponse = await axios.get(`http://localhost:8080/workoutWithWeights/${workoutWithWeightsId}`)
+    const workoutWithWeights = workoutResponse.data
+    const workoutId = workoutWithWeights.workout.id
 
-  fetch(`http://localhost:8080/workoutWithWeights/${workoutWithWeightsId}`)
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error('Fehler beim Abrufen des WorkoutWithWeights')
-      }
-      return response.json()
-    })
-    .then((workoutWithWeights) => {
-      const workoutId = workoutWithWeights.workout.id
-      console.log('Workout ID:', workoutId)
+    // WorkoutWithWeights löschen
+    await axios.delete(`http://localhost:8080/workoutWithWeights/${workoutWithWeightsId}`)
+    console.log('AllWorkoutsView: WorkoutWithWeights gelöscht')
 
-      return fetch(`http://localhost:8080/workoutWithWeights/${workoutWithWeightsId}`, {
-        method: 'DELETE',
-      }).then((response) => {
-        if (!response.ok) {
-          throw new Error('Fehler beim Löschen des WorkoutWithWeights')
-        }
-        console.log(`WorkoutWithWeights mit ID ${workoutWithWeightsId} gelöscht`)
-
-        return fetch(`http://localhost:8080/workout/${workoutId}`, {
-          method: 'DELETE',
-        })
-      })
-    })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error('Fehler beim Löschen des Workouts')
-      }
-      console.log('Workout erfolgreich gelöscht')
-      loadWorkouts()
-    })
-    .catch((error) => console.error('Fehler beim Löschen des Workouts:', error))
+    // Workout löschen
+    await axios.delete(`http://localhost:8080/workout/${workoutId}`)
+    console.log('AllWorkoutsView: Workout erfolgreich gelöscht')
+    
+    loadWorkouts()
+  } catch (error) {
+    console.error('AllWorkoutsView: Fehler beim Löschen des Workouts:', error)
+    if (error.response?.status === 401) {
+      alert('Authentifizierung fehlgeschlagen. Bitte melden Sie sich erneut an.')
+    } else if (error.response?.status === 403) {
+      alert('Zugriff verweigert. Dieses Workout gehört nicht Ihnen.')
+    }
+  }
 }
 
 // Workout duplizieren
 const duplicateWorkout = async (workoutId) => {
   try {
-    const response = await fetch(`http://localhost:8080/workoutWithWeights/${workoutId}`)
-    if (!response.ok) {
-      throw new Error(`Fehler beim Abrufen des Workouts: ${response.status}`)
-    }
-    const workoutData = await response.json()
+    console.log('AllWorkoutsView: Dupliziere Workout:', workoutId)
+    
+    const response = await axios.get(`http://localhost:8080/workoutWithWeights/${workoutId}`)
+    const workoutData = response.data
 
     const newWorkout = {
       name: workoutData.workout.name,
@@ -207,19 +209,10 @@ const duplicateWorkout = async (workoutId) => {
       show: false,
     }
 
-    console.log('Neues Workout:', newWorkout)
+    console.log('AllWorkoutsView: Neues Workout:', newWorkout)
 
-    const saveWorkoutResponse = await fetch('http://localhost:8080/workout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newWorkout),
-    })
-
-    if (!saveWorkoutResponse.ok) {
-      throw new Error(`Fehler beim Speichern des neuen Workouts: ${saveWorkoutResponse.status}`)
-    }
-
-    const savedWorkout = await saveWorkoutResponse.json()
+    const saveWorkoutResponse = await axios.post('http://localhost:8080/workout', newWorkout)
+    const savedWorkout = saveWorkoutResponse.data
 
     const newWorkoutWithWeights = {
       ...workoutData,
@@ -232,23 +225,18 @@ const duplicateWorkout = async (workoutId) => {
       })),
     }
 
-    const saveWorkoutWithWeightsResponse = await fetch('http://localhost:8080/OneWorkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newWorkoutWithWeights),
-    })
+    await axios.post('http://localhost:8080/OneWorkout', newWorkoutWithWeights)
 
-    if (!saveWorkoutWithWeightsResponse.ok) {
-      throw new Error(
-        `Fehler beim Speichern des neuen WorkoutWithWeights: ${saveWorkoutWithWeightsResponse.status}`,
-      )
-    }
-
-    alert('Workout und WorkoutWithWeights erfolgreich dupliziert')
+    console.log('AllWorkoutsView: Workout erfolgreich dupliziert')
+    alert('Workout erfolgreich dupliziert')
     loadWorkouts()
   } catch (error) {
-    console.error('Fehler beim Duplizieren des Workouts:', error)
-    alert('Fehler beim Duplizieren des Workouts')
+    console.error('AllWorkoutsView: Fehler beim Duplizieren des Workouts:', error)
+    if (error.response?.status === 401) {
+      alert('Authentifizierung fehlgeschlagen. Bitte melden Sie sich erneut an.')
+    } else {
+      alert('Fehler beim Duplizieren des Workouts')
+    }
   }
 }
 

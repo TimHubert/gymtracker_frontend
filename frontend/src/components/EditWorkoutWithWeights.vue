@@ -161,6 +161,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import axios from 'axios'
 
 const route = useRoute()
 const router = useRouter()
@@ -174,20 +175,39 @@ const originalWorkout = ref(null)
 
 const loadOptions = async () => {
   try {
-    const response = await fetch('http://localhost:8080/workoutsWithWeights')
-    const data = await response.json()
+    const response = await axios.get('/workoutsWithWeights')
+    const data = response.data
 
-    const flattenedWorkouts = data.flatMap((workout) =>
-      workout.workout.exercise.map((exercise) => ({
+    // Sicherstellen, dass data ein Array ist
+    if (!Array.isArray(data)) {
+      console.warn('workoutsWithWeights API returned non-array:', data)
+      exerciseOptions.value = []
+      equipmentOptions.value = []
+      return
+    }
+
+    const flattenedWorkouts = data.flatMap((workout) => {
+      // Sicherstellen, dass workout und workout.workout existieren
+      if (!workout || !workout.workout || !workout.workout.exercise || !Array.isArray(workout.workout.exercise)) {
+        console.warn('Invalid workout structure:', workout)
+        return []
+      }
+      
+      return workout.workout.exercise.map((exercise) => ({
         exerciseName: exercise.name,
         equipment: exercise.equipment,
-      })),
-    )
+      }))
+    })
 
     exerciseOptions.value = [...new Set(flattenedWorkouts.map((item) => item.exerciseName))]
     equipmentOptions.value = [...new Set(flattenedWorkouts.map((item) => item.equipment))]
+    
+    console.log('Loaded exercise options:', exerciseOptions.value.length)
+    console.log('Loaded equipment options:', equipmentOptions.value.length)
   } catch (error) {
     console.error('Fehler beim Laden der Optionen:', error)
+    exerciseOptions.value = []
+    equipmentOptions.value = []
   }
 }
 
@@ -321,7 +341,6 @@ const saveWorkout = async () => {
       }
     }
 
-    const apiUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL
     const payload = {
       ...workoutWithWeights.value,
       workout: {
@@ -333,35 +352,26 @@ const saveWorkout = async () => {
         })),
       },
     }
-    const response = await fetch(`${apiUrl}/OneWorkout/${workoutWithWeights.value.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    })
-    if (response.ok) {
-      alert('Workout erfolgreich gespeichert')
-      isEditing.value = false
-      // Original aktualisieren
-      originalWorkout.value = JSON.parse(JSON.stringify(workoutWithWeights.value))
-    } else {
-      console.error('Fehler beim Speichern des Workouts:', await response.text())
-    }
+    
+    const response = await axios.put(`/OneWorkout/${workoutWithWeights.value.id}`, payload)
+    alert('Workout erfolgreich gespeichert')
+    isEditing.value = false
+    // Original aktualisieren
+    originalWorkout.value = JSON.parse(JSON.stringify(workoutWithWeights.value))
   } catch (error) {
     console.error('Fehler beim Speichern des Workouts:', error)
+    alert('Fehler beim Speichern des Workouts')
   }
 }
 
-onMounted(() => {
-  const apiUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL
-  fetch(`${apiUrl}/workoutWithWeights/${route.params.id}`)
-    .then((response) => response.json())
-    .then((data) => {
-      workoutWithWeights.value = data
-      originalWorkout.value = JSON.parse(JSON.stringify(data))
-    })
-    .catch((error) => console.error('Fehler beim Laden des Workouts:', error))
+onMounted(async () => {
+  try {
+    const response = await axios.get(`/workoutWithWeights/${route.params.id}`)
+    workoutWithWeights.value = response.data
+    originalWorkout.value = JSON.parse(JSON.stringify(response.data))
+  } catch (error) {
+    console.error('Fehler beim Laden des Workouts:', error)
+  }
 
   loadOptions()
 })
@@ -574,7 +584,7 @@ select option:disabled {
   box-sizing: border-box;
   text-align: center;
   margin-bottom: 0;
-
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 .rep-input::-webkit-outer-spin-button,

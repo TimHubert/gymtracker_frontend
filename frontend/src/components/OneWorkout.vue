@@ -158,6 +158,8 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+import axios from 'axios'
 
 const props = defineProps({
   workoutId: {
@@ -167,6 +169,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['back'])
+const authStore = useAuthStore()
 const workouts = ref([])
 const exerciseOptions = ref([])
 const equipmentOptions = ref([])
@@ -180,8 +183,17 @@ const muscleGroups = ['Brust', 'Lat', 'Trizeps', 'Bizeps', 'Schulter', 'Beine']
 
 const loadOptions = async () => {
   try {
-    const response = await fetch('http://localhost:8080/workoutsWithWeights')
-    const data = await response.json()
+    console.log('OneWorkout: Lade Workout-Optionen...')
+    
+    // Warte bis Authentifizierung initialisiert ist
+    if (!authStore.isAuthenticated) {
+      console.log('OneWorkout: Warte auf Authentifizierung...')
+      return
+    }
+
+    const response = await axios.get('http://localhost:8080/workoutsWithWeights')
+    console.log('OneWorkout: Workout-Optionen geladen:', response.data)
+    const data = response.data
     workouts.value = data
 
     flattenedWorkouts.value = data.flatMap((workout) =>
@@ -205,14 +217,26 @@ const loadOptions = async () => {
     exerciseOptions.value = [...new Set(flattenedWorkouts.value.map((item) => item.exerciseName))]
     equipmentOptions.value = [...new Set(flattenedWorkouts.value.map((item) => item.equipment))]
   } catch (error) {
-    console.error('Fehler beim Laden der Workouts:', error)
+    console.error('OneWorkout: Fehler beim Laden der Workouts:', error)
+    if (error.response?.status === 401) {
+      console.error('OneWorkout: Authentifizierung fehlgeschlagen')
+    }
   }
 }
 
 const loadWorkout = async () => {
   try {
-    const response = await fetch(`http://localhost:8080/workout/${props.workoutId}`)
-    const data = await response.json()
+    console.log('OneWorkout: Lade Workout...', props.workoutId)
+    
+    // Warte bis Authentifizierung initialisiert ist
+    if (!authStore.isAuthenticated) {
+      console.log('OneWorkout: Warte auf Authentifizierung...')
+      return
+    }
+
+    const response = await axios.get(`http://localhost:8080/workout/${props.workoutId}`)
+    console.log('OneWorkout: Workout geladen:', response.data)
+    const data = response.data
     const loadedWorkout = {
       id: data.id,
       name: data.name,
@@ -227,7 +251,12 @@ const loadWorkout = async () => {
     workout.value = JSON.parse(JSON.stringify(loadedWorkout))
     originalWorkout.value = JSON.parse(JSON.stringify(loadedWorkout))
   } catch (error) {
-    console.error('Fehler beim Laden des Workouts:', error)
+    console.error('OneWorkout: Fehler beim Laden des Workouts:', error)
+    if (error.response?.status === 401) {
+      console.error('OneWorkout: Authentifizierung fehlgeschlagen')
+    } else if (error.response?.status === 403) {
+      console.error('OneWorkout: Zugriff verweigert')
+    }
   }
 }
 
@@ -311,6 +340,8 @@ const cancelEdit = () => {
 
 const saveWorkoutWithWeights = async () => {
   try {
+    console.log('OneWorkout: Speichere Workout mit Gewichten...')
+    
     if (!workout.value.name.trim()) {
       alert('Bitte geben Sie einen Namen für das Workout ein.')
       return
@@ -355,10 +386,11 @@ const saveWorkoutWithWeights = async () => {
       }
     }
 
+    // Korrigierte Payload-Struktur für WorkoutWithWeights
     const payload = {
       workout: {
-        id: null,
         name: workout.value.name,
+        show: false, // show gehört zum Workout, nicht zu WorkoutWithWeights
         exercise: workout.value.exercises.map((ex) => ({
           name: ex.customName || ex.name,
           description: 'Keine Beschreibung vorhanden',
@@ -367,27 +399,26 @@ const saveWorkoutWithWeights = async () => {
         })),
       },
       date: workout.value.date || new Date().toISOString().split('T')[0],
-      show: false,
       weights: workout.value.exercises.map((ex) => ({
         reps: ex.reps,
         weights: ex.weights,
       })),
     }
 
-    const response = await fetch('http://localhost:8080/OneWorkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-
-    if (!response.ok) throw new Error(`HTTP-Fehler! Status: ${response.status}`)
+    console.log('OneWorkout: Korrigierte Payload:', payload)
+    const response = await axios.post('http://localhost:8080/OneWorkout', payload)
+    console.log('OneWorkout: Workout erfolgreich gespeichert:', response.data)
 
     alert('Workout erfolgreich gespeichert')
     loadOptions()
     emit('back')
   } catch (error) {
-    console.error('Fehler beim Speichern des Workouts:', error)
-    alert('Fehler beim Speichern des Workouts: ' + error.message)
+    console.error('OneWorkout: Fehler beim Speichern des Workouts:', error)
+    if (error.response?.status === 401) {
+      alert('Authentifizierung fehlgeschlagen. Bitte melden Sie sich erneut an.')
+    } else {
+      alert('Fehler beim Speichern des Workouts: ' + (error.response?.data || error.message))
+    }
   }
 }
 
@@ -625,6 +656,7 @@ select option:disabled {
   box-sizing: border-box;
   text-align: center;
   margin-bottom: 0;
+  appearance: textfield;
   -moz-appearance: textfield;
   outline: none;
 }

@@ -69,20 +69,36 @@
 
 <script setup>
 import { ref, vModelCheckbox, onMounted, computed } from 'vue'
+import { useAuthStore } from '../stores/auth'
+import axios from 'axios'
+
+const authStore = useAuthStore()
 
 onMounted(() => {
   fetchWorkouts()
 })
 
-function fetchWorkouts() {
-  fetch('http://localhost:8080/workouts')
-    .then((response) => response.json())
-    .then((data) => {
-      console.log('Geladene Workouts:', data)
-      const exercises = data.flatMap((workout) => workout.exercise)
-      workouts.value = exercises
-    })
-    .catch((error) => console.error('Fehler beim Laden der Workouts:', error))
+async function fetchWorkouts() {
+  try {
+    console.log('NewWorkout: Lade Workouts...')
+    
+    // Warte bis Authentifizierung initialisiert ist
+    if (!authStore.isAuthenticated) {
+      console.log('⏳ NewWorkout: Warte auf Authentifizierung...')
+      return
+    }
+
+    const response = await axios.get('http://localhost:8080/workouts')
+    console.log('NewWorkout: Workouts geladen:', response.data)
+
+    const exercises = response.data.flatMap((workout) => workout.exercise)
+    workouts.value = exercises
+  } catch (error) {
+    console.error('NewWorkout: Fehler beim Laden der Workouts:', error)
+    if (error.response?.status === 401) {
+      console.error('🔒 NewWorkout: Authentifizierung fehlgeschlagen')
+    }
+  }
 }
 
 const zeigeÜbungen = ref(false)
@@ -138,6 +154,8 @@ function removeÜbung(index) {
 
 async function submitWorkout() {
   try {
+    console.log('Erstelle Workout:', workout.value)
+
     if (!workout.value.name.trim()) {
       alert('Bitte geben Sie einen Namen für das Workout ein.')
       return
@@ -170,27 +188,20 @@ async function submitWorkout() {
       show: true,
     }
 
-    console.log('Gesendete Daten:', JSON.stringify(payload))
+    console.log('📦 NewWorkout: Gesendete Daten:', JSON.stringify(payload))
 
-    const response = await fetch('http://localhost:8080/workout', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    })
+    const response = await axios.post('http://localhost:8080/workout', payload)
 
-    if (!response.ok) {
-      throw new Error('Fehler beim Erstellen des Workouts')
-    }
-
-    const result = await response.json()
-    console.log('Workout erfolgreich erstellt:', result)
+    console.log('NewWorkout: Workout erfolgreich erstellt:', response.data)
     alert('Workout erfolgreich erstellt')
     window.location.reload()
   } catch (error) {
-    console.error('Fehler:', error)
-    alert('Fehler beim Erstellen des Workouts')
+    console.error('NewWorkout: Fehler:', error)
+    if (error.response?.status === 401) {
+      alert('Authentifizierung fehlgeschlagen. Bitte melden Sie sich erneut an.')
+    } else {
+      alert('Fehler beim Erstellen des Workouts')
+    }
   }
 }
 </script>

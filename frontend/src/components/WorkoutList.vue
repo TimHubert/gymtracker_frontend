@@ -63,18 +63,32 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useAuthStore } from '../stores/auth'
+import axios from 'axios'
 
+const authStore = useAuthStore()
 const workouts = ref([])
 
 // Filterung der Workouts basierend auf "show"
-const loadWorkouts = () => {
-  fetch('http://localhost:8080/workouts')
-    .then((response) => response.json())
-    .then((data) => {
-      console.log('Geladene Workouts:', data)
-      workouts.value = data.filter((workout) => workout.show) // Nur Workouts mit show: true anzeigen
-    })
-    .catch((error) => console.error('Fehler beim Laden der Workouts:', error))
+const loadWorkouts = async () => {
+  try {
+    console.log('WorkoutList: Lade Workouts...')
+    
+    // Warte bis Authentifizierung initialisiert ist
+    if (!authStore.isAuthenticated) {
+      console.log('WorkoutList: Warte auf Authentifizierung...')
+      return
+    }
+
+    const response = await axios.get('http://localhost:8080/workouts')
+    console.log('WorkoutList: Workouts geladen:', response.data)
+    workouts.value = response.data.filter((workout) => workout.show) // Nur Workouts mit show: true anzeigen
+  } catch (error) {
+    console.error('WorkoutList: Fehler beim Laden der Workouts:', error)
+    if (error.response?.status === 401) {
+      console.error('WorkoutList: Authentifizierung fehlgeschlagen')
+    }
+  }
 }
 
 onMounted(() => {
@@ -87,8 +101,8 @@ const flattenedWorkouts = computed(() => {
     workout.exercise.map((ex) => ({
       workoutId: workout.id,
       workoutName: workout.name,
-      exercise: exercise,
-      exId: exercise.id,
+      exercise: ex,
+      exId: ex.id,
     })),
   )
 })
@@ -103,18 +117,17 @@ const deleteExercise = async (workoutId, exId) => {
   if (!confirmDelete) return
 
   try {
-    const response = await fetch(`http://localhost:8080/workout/${workoutId}/${exId}`, {
-      method: 'DELETE',
-    })
-    if (response.ok) {
-      console.log(`Exercise mit ID ${exId} in Workout ${workoutId} erfolgreich gelöscht`)
-      window.location.reload()
-    } else {
-      console.error('Fehler beim Löschen der Übung:', await response.text())
-      window.location.reload()
-    }
+    console.log('WorkoutList: Lösche Übung:', workoutId, exId)
+    const response = await axios.delete(`http://localhost:8080/workout/${workoutId}/${exId}`)
+    console.log('WorkoutList: Übung erfolgreich gelöscht')
+    window.location.reload()
   } catch (error) {
-    console.error('Fehler beim Löschen der Übung:', error)
+    console.error('WorkoutList: Fehler beim Löschen der Übung:', error)
+    if (error.response?.status === 401) {
+      alert('Authentifizierung fehlgeschlagen. Bitte melden Sie sich erneut an.')
+    } else if (error.response?.status === 403) {
+      alert('Zugriff verweigert. Diese Übung gehört nicht Ihnen.')
+    }
     window.location.reload()
   }
 }
@@ -129,20 +142,17 @@ const deleteWorkout = async (workoutId) => {
   if (!confirmDelete) return
 
   try {
-    const response = await fetch(`http://localhost:8080/workout/${workoutId}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-    if (response.ok) {
-      console.log(`Workout erfolgreich gelöscht`)
-      loadWorkouts()
-    } else {
-      console.error('Fehler beim Ausblenden des Workouts:', await response.text())
-    }
+    console.log('WorkoutList: Lösche Workout:', workoutId)
+    const response = await axios.delete(`http://localhost:8080/workout/${workoutId}`)
+    console.log('WorkoutList: Workout erfolgreich gelöscht')
+    loadWorkouts()
   } catch (error) {
-    console.error('Fehler beim Ausblenden des Workouts:', error)
+    console.error('WorkoutList: Fehler beim Löschen des Workouts:', error)
+    if (error.response?.status === 401) {
+      alert('Authentifizierung fehlgeschlagen. Bitte melden Sie sich erneut an.')
+    } else if (error.response?.status === 403) {
+      alert('Zugriff verweigert. Dieses Workout gehört nicht Ihnen.')
+    }
   }
 }
 </script>
@@ -259,30 +269,6 @@ const deleteWorkout = async (workoutId) => {
   .styled-table td {
     padding: 4px 2px;
     font-size: 0.75rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  /* Spaltenbreiten anpassen */
-  .styled-table th:nth-child(1),
-  .styled-table td:nth-child(1) {
-    width: 35%;
-  }
-
-  .styled-table th:nth-child(2),
-  .styled-table td:nth-child(2) {
-    width: 25%;
-  }
-
-  .styled-table th:nth-child(3),
-  .styled-table td:nth-child(3) {
-    width: 30%;
-  }
-
-  .styled-table th:nth-child(4),
-  .styled-table td:nth-child(4) {
-    width: 10%;
   }
 }
 

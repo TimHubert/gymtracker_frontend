@@ -1,5 +1,11 @@
 <template>
-  <div class="workout-list">
+  <div v-if="workouts.length === 0" class="no-workouts-message">
+    <div class="emoji-box">
+      📊 Keine Workout-Daten verfügbar. Absolviere dein erstes Training, um Statistiken zu sehen!
+    </div>
+  </div>
+
+  <div v-else class="workout-list">
     <div class="stat-box">
       <h2>Trainingshäufigkeit pro Workout</h2>
       <canvas ref="chartCanvas"></canvas>
@@ -41,6 +47,7 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import Chart from 'chart.js/auto'
+import axios from 'axios'
 
 const workouts = ref([])
 const filteredWorkouts = ref([])
@@ -66,15 +73,15 @@ const workoutCounts = computed(() => {
 
 const totalWorkouts = computed(() => workouts.value.length)
 
-const loadWorkouts = () => {
-  fetch('http://localhost:8080/workoutsWithWeights')
-    .then((response) => response.json())
-    .then((data) => {
-      console.log('Geladene Workouts:', JSON.stringify(data, null, 2))
-      workouts.value = data
-      filteredWorkouts.value = data
-    })
-    .catch((error) => console.error('Fehler beim Laden der Workouts:', error))
+const loadWorkouts = async () => {
+  try {
+    const response = await axios.get('/workoutsWithWeights')
+    console.log('Geladene Workouts:', JSON.stringify(response.data, null, 2))
+    workouts.value = response.data
+    filteredWorkouts.value = response.data
+  } catch (error) {
+    console.error('Fehler beim Laden der Workouts:', error)
+  }
 }
 
 const filterWorkoutsByDate = () => {
@@ -89,18 +96,57 @@ const filterWorkoutsByDate = () => {
   }
 }
 
-onMounted(() => {
-  loadWorkouts()
+onMounted(async () => {
+  await loadWorkouts()
+
+  // Charts nur erstellen, wenn Workouts vorhanden sind
+  if (workouts.value.length > 0) {
+    // Kurze Verzögerung um sicherzustellen, dass DOM bereit ist
+    setTimeout(() => {
+      createChart()
+      createExerciseChart()
+      createProgressChart()
+    }, 100)
+  }
+
+  // Watcher für zukünftige Änderungen
   watch(
     workouts,
     () => {
-      createChart()
-      createProgressChart()
+      if (workouts.value.length > 0) {
+        setTimeout(() => {
+          createChart()
+          createExerciseChart()
+          createProgressChart()
+        }, 100)
+      }
+    },
+    { immediate: false },
+  )
+
+  watch(
+    filteredWorkouts,
+    () => {
+      if (filteredWorkouts.value.length > 0) {
+        setTimeout(() => {
+          createExerciseChart()
+        }, 100)
+      }
     },
     { immediate: true },
   )
-  watch(filteredWorkouts, createExerciseChart, { immediate: true })
-  watch([selectedExercise, selectedSet], createProgressChart)
+
+  watch(
+    [selectedExercise, selectedSet],
+    () => {
+      if (workouts.value.length > 0) {
+        setTimeout(() => {
+          createProgressChart()
+        }, 100)
+      }
+    },
+    { immediate: true },
+  )
 })
 
 const createChart = () => {
@@ -387,13 +433,28 @@ const createProgressChart = () => {
 
   if (progressData.length === 0) return
 
-  // Farbpalette für mehrere Übungen
+  // Erweiterte Farbpalette für mehrere Übungen
   const colors = [
-    'rgb(0, 110, 255)', // Blau
-    'rgb(255, 99, 132)', // Rosa
-    'rgb(75, 192, 192)', // Türkis
-    'rgb(255, 159, 64)', // Orange
-    'rgb(153, 102, 255)', // Lila
+    'rgb(0, 110, 255)',    // Blau
+    'rgb(255, 99, 132)',   // Rosa/Rot
+    'rgb(75, 192, 192)',   // Türkis
+    'rgb(255, 159, 64)',   // Orange
+    'rgb(153, 102, 255)',  // Lila
+    'rgb(255, 205, 86)',   // Gelb
+    'rgb(54, 162, 235)',   // Hellblau
+    'rgb(255, 99, 255)',   // Magenta
+    'rgb(199, 199, 199)',  // Grau
+    'rgb(83, 102, 255)',   // Indigo
+    'rgb(255, 159, 132)',  // Lachs
+    'rgb(132, 255, 132)',  // Hellgrün
+    'rgb(255, 255, 99)',   // Hellgelb
+    'rgb(159, 255, 255)',  // Cyan
+    'rgb(255, 132, 199)',  // Pink
+    'rgb(132, 199, 255)',  // Babyblau
+    'rgb(199, 255, 132)',  // Lime
+    'rgb(255, 199, 255)',  // Lavendel
+    'rgb(199, 132, 255)',  // Violett
+    'rgb(132, 255, 199)',  // Mint
   ]
 
   // Sammle alle eindeutigen Daten über alle Übungen
@@ -490,50 +551,30 @@ const createProgressChart = () => {
   })
 }
 
-const deleteWorkout = (workoutWithWeightsId) => {
-  console.log('WorkoutWithWeights ID zum Löschen:', workoutWithWeightsId)
+const deleteWorkout = async (workoutWithWeightsId) => {
+  try {
+    console.log('WorkoutWithWeights ID zum Löschen:', workoutWithWeightsId)
 
-  fetch(`http://localhost:8080/workoutWithWeights/${workoutWithWeightsId}`)
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error('Fehler beim Abrufen des WorkoutWithWeights')
-      }
-      return response.json()
-    })
-    .then((workoutWithWeights) => {
-      const workoutId = workoutWithWeights.workout.id
-      console.log('Workout ID:', workoutId)
+    const response = await axios.get(`/workoutWithWeights/${workoutWithWeightsId}`)
+    const workoutWithWeights = response.data
+    const workoutId = workoutWithWeights.workout.id
+    console.log('Workout ID:', workoutId)
 
-      return fetch(`http://localhost:8080/workoutWithWeights/${workoutWithWeightsId}`, {
-        method: 'DELETE',
-      }).then((response) => {
-        if (!response.ok) {
-          throw new Error('Fehler beim Löschen des WorkoutWithWeights')
-        }
-        console.log(`WorkoutWithWeights mit ID ${workoutWithWeightsId} gelöscht`)
+    await axios.delete(`/workoutWithWeights/${workoutWithWeightsId}`)
+    console.log(`WorkoutWithWeights mit ID ${workoutWithWeightsId} gelöscht`)
 
-        return fetch(`http://localhost:8080/workout/${workoutId}`, {
-          method: 'DELETE',
-        })
-      })
-    })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error('Fehler beim Löschen des Workouts')
-      }
-      console.log('Workout erfolgreich gelöscht')
-      loadWorkouts()
-    })
-    .catch((error) => console.error('Fehler beim Löschen des Workouts:', error))
+    await axios.delete(`/workout/${workoutId}`)
+    console.log('Workout erfolgreich gelöscht')
+    loadWorkouts()
+  } catch (error) {
+    console.error('Fehler beim Löschen des Workouts:', error)
+  }
 }
 
 const duplicateWorkout = async (workoutId) => {
   try {
-    const response = await fetch(`http://localhost:8080/workoutWithWeights/${workoutId}`)
-    if (!response.ok) {
-      throw new Error(`Fehler beim Abrufen des Workouts: ${response.status}`)
-    }
-    const workoutData = await response.json()
+    const response = await axios.get(`/workoutWithWeights/${workoutId}`)
+    const workoutData = response.data
 
     const newWorkout = {
       name: workoutData.workout.name,
@@ -548,17 +589,8 @@ const duplicateWorkout = async (workoutId) => {
 
     console.log('Neues Workout:', newWorkout)
 
-    const saveWorkoutResponse = await fetch('http://localhost:8080/workout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newWorkout),
-    })
-
-    if (!saveWorkoutResponse.ok) {
-      throw new Error(`Fehler beim Speichern des neuen Workouts: ${saveWorkoutResponse.status}`)
-    }
-
-    const savedWorkout = await saveWorkoutResponse.json()
+    const saveWorkoutResponse = await axios.post('/workout', newWorkout)
+    const savedWorkout = saveWorkoutResponse.data
 
     const newWorkoutWithWeights = {
       ...workoutData,
@@ -571,18 +603,7 @@ const duplicateWorkout = async (workoutId) => {
       })),
     }
 
-    const saveWorkoutWithWeightsResponse = await fetch('http://localhost:8080/OneWorkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newWorkoutWithWeights),
-    })
-
-    if (!saveWorkoutWithWeightsResponse.ok) {
-      throw new Error(
-        `Fehler beim Speichern des neuen WorkoutWithWeights: ${saveWorkoutWithWeightsResponse.status}`,
-      )
-    }
-
+    await axios.post('/OneWorkout', newWorkoutWithWeights)
     alert('Workout und WorkoutWithWeights erfolgreich dupliziert')
     loadWorkouts()
   } catch (error) {

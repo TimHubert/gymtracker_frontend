@@ -21,22 +21,41 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useAuthStore } from '../stores/auth'
+import axios from 'axios'
 
+const authStore = useAuthStore()
 const workouts = ref([])
 
-const loadWorkouts = () => {
-  fetch('http://localhost:8080/workouts')
-    .then((response) => response.json())
-    .then((data) => {
-      const filtered = data.filter(
-        (workout) => workout.show === true && workout.exercise && workout.exercise.length > 0,
-      )
-      const uniqueWorkouts = filtered.filter(
-        (workout, index, self) => index === self.findIndex((w) => w.name === workout.name),
-      )
-      workouts.value = uniqueWorkouts
+const loadWorkouts = async () => {
+  try {
+    console.log('WorkoutChoice: Lade Workouts...')
+    
+    // Warte bis Authentifizierung initialisiert ist
+    if (!authStore.isAuthenticated) {
+      console.log('WorkoutChoice: Warte auf Authentifizierung...')
+      return
+    }
+
+    const response = await axios.get('http://localhost:8080/workouts', {
+      headers: {
+        'Authorization': `Bearer ${authStore.token}`
+      }
     })
-    .catch((error) => console.error('Fehler beim Laden der Workouts:', error))
+    console.log('WorkoutChoice: Workouts geladen:', response.data)
+    workouts.value = response.data.filter(workout => workout.show === true)
+    
+    if (workouts.value.length === 0) {
+      noWorkoutsMessage.value = "Keine sichtbaren Workouts gefunden."
+    }
+  } catch (error) {
+    console.error('WorkoutChoice: Fehler beim Laden der Workouts:', error)
+    if (error.response?.status === 401) {
+      console.error('WorkoutChoice: Authentifizierung fehlgeschlagen')
+      authStore.logout()
+    }
+    noWorkoutsMessage.value = "Fehler beim Laden der Workouts."
+  }
 }
 
 onMounted(() => {
