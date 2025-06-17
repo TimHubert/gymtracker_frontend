@@ -26,11 +26,12 @@ import axios from 'axios'
 
 const authStore = useAuthStore()
 const workouts = ref([])
+const noWorkoutsMessage = ref('')
 
 const loadWorkouts = async () => {
   try {
     console.log('WorkoutChoice: Lade Workouts...')
-    
+
     // Warte bis Authentifizierung initialisiert ist
     if (!authStore.isAuthenticated) {
       console.log('WorkoutChoice: Warte auf Authentifizierung...')
@@ -39,14 +40,14 @@ const loadWorkouts = async () => {
 
     const response = await axios.get('http://localhost:8080/workouts', {
       headers: {
-        'Authorization': `Bearer ${authStore.token}`
-      }
+        Authorization: `Bearer ${authStore.token}`,
+      },
     })
     console.log('WorkoutChoice: Workouts geladen:', response.data)
-    workouts.value = response.data.filter(workout => workout.show === true)
-    
+    workouts.value = response.data.filter((workout) => workout.show === true)
+
     if (workouts.value.length === 0) {
-      noWorkoutsMessage.value = "Keine sichtbaren Workouts gefunden."
+      noWorkoutsMessage.value = 'Keine sichtbaren Workouts gefunden.'
     }
   } catch (error) {
     console.error('WorkoutChoice: Fehler beim Laden der Workouts:', error)
@@ -54,7 +55,7 @@ const loadWorkouts = async () => {
       console.error('WorkoutChoice: Authentifizierung fehlgeschlagen')
       authStore.logout()
     }
-    noWorkoutsMessage.value = "Fehler beim Laden der Workouts."
+    noWorkoutsMessage.value = 'Fehler beim Laden der Workouts.'
   }
 }
 
@@ -67,8 +68,8 @@ const flattenedWorkouts = computed(() => {
     workout.exercise.map((ex) => ({
       workoutId: workout.id,
       workoutName: workout.name,
-      exercise: exercise,
-      exId: exercise.id,
+      exercise: ex,
+      exId: ex.id,
     })),
   )
 })

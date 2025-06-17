@@ -110,7 +110,7 @@ const loadWorkouts = async () => {
     const response = await axios.get('http://localhost:8080/workoutsWithWeights')
     console.log('AllWorkoutsView: Workouts geladen:', response.data)
     workouts.value = response.data
-    
+
     // Setze das letzte Workout-Datum als Standardwert
     if (!selectedDate.value) {
       selectedDate.value = findLatestWorkoutDate(response.data)
@@ -125,12 +125,18 @@ const loadWorkouts = async () => {
 }
 
 const uniqueWorkoutNames = computed(() => {
-  const names = new Set(workouts.value.map((w) => w.workout.name))
+  if (!workouts.value || !Array.isArray(workouts.value)) return []
+  const names = new Set(workouts.value.map((w) => w.workout?.name).filter(Boolean))
   return Array.from(names).sort()
 })
 
 // Filter anwenden
 const applyFilters = () => {
+  if (!workouts.value || !Array.isArray(workouts.value)) {
+    filteredWorkouts.value = []
+    return
+  }
+
   let filtered = workouts.value
 
   // Filter nach Datum
@@ -144,7 +150,7 @@ const applyFilters = () => {
 
   // Filter nach ausgewähltem Workout
   if (selectedWorkout.value) {
-    filtered = filtered.filter((workout) => workout.workout.name === selectedWorkout.value)
+    filtered = filtered.filter((workout) => workout.workout?.name === selectedWorkout.value)
   }
 
   filteredWorkouts.value = filtered
@@ -165,9 +171,11 @@ onMounted(() => {
 const deleteWorkout = async (workoutWithWeightsId) => {
   try {
     console.log('AllWorkoutsView: Lösche Workout:', workoutWithWeightsId)
-    
+
     // Erst WorkoutWithWeights abrufen um Workout ID zu bekommen
-    const workoutResponse = await axios.get(`http://localhost:8080/workoutWithWeights/${workoutWithWeightsId}`)
+    const workoutResponse = await axios.get(
+      `http://localhost:8080/workoutWithWeights/${workoutWithWeightsId}`,
+    )
     const workoutWithWeights = workoutResponse.data
     const workoutId = workoutWithWeights.workout.id
 
@@ -178,7 +186,7 @@ const deleteWorkout = async (workoutWithWeightsId) => {
     // Workout löschen
     await axios.delete(`http://localhost:8080/workout/${workoutId}`)
     console.log('AllWorkoutsView: Workout erfolgreich gelöscht')
-    
+
     loadWorkouts()
   } catch (error) {
     console.error('AllWorkoutsView: Fehler beim Löschen des Workouts:', error)
@@ -194,7 +202,7 @@ const deleteWorkout = async (workoutWithWeightsId) => {
 const duplicateWorkout = async (workoutId) => {
   try {
     console.log('AllWorkoutsView: Dupliziere Workout:', workoutId)
-    
+
     const response = await axios.get(`http://localhost:8080/workoutWithWeights/${workoutId}`)
     const workoutData = response.data
 
@@ -252,19 +260,23 @@ const isSetDefined = (weights, setIndex) => {
 }
 
 const flattenedWorkouts = computed(() => {
-  return workouts.value.flatMap((workout) =>
-    workout.workout.exercise.map((exercise, index) => ({
-      workoutWithWeightsId: workout.workoutWithWeights.id,
+  if (!workouts.value || !Array.isArray(workouts.value)) return []
+
+  return workouts.value.flatMap((workout) => {
+    if (!workout.workout?.exercise || !Array.isArray(workout.workout.exercise)) return []
+
+    return workout.workout.exercise.map((exercise, index) => ({
+      workoutWithWeightsId: workout.workoutWithWeights?.id || workout.id,
       workoutId: workout.workout.id,
       workoutName: workout.workout.name,
       exerciseName: exercise.name,
       exId: exercise.id,
       targetMuscleGroup: exercise.targetMuscleGroup,
       equipment: exercise.equipment,
-      reps: workout.weights[index]?.reps || [],
-      weights: workout.weights[index]?.weights || [],
-    })),
-  )
+      reps: workout.weights?.[index]?.reps || [],
+      weights: workout.weights?.[index]?.weights || [],
+    }))
+  })
 })
 </script>
 
