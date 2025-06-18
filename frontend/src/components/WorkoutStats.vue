@@ -48,6 +48,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import Chart from 'chart.js/auto'
 import axios from 'axios'
+import { createApiUrl, API_CONFIG } from '../config/api'
 
 const workouts = ref([])
 const filteredWorkouts = ref([])
@@ -75,7 +76,7 @@ const totalWorkouts = computed(() => workouts.value.length)
 
 const loadWorkouts = async () => {
   try {
-    const response = await axios.get('/workoutsWithWeights')
+    const response = await axios.get(createApiUrl(API_CONFIG.WORKOUTS.WITH_WEIGHTS))
     console.log('Geladene Workouts:', JSON.stringify(response.data, null, 2))
     workouts.value = response.data
     filteredWorkouts.value = response.data
@@ -555,15 +556,15 @@ const deleteWorkout = async (workoutWithWeightsId) => {
   try {
     console.log('WorkoutWithWeights ID zum Löschen:', workoutWithWeightsId)
 
-    const response = await axios.get(`/workoutWithWeights/${workoutWithWeightsId}`)
+    const response = await axios.get(createApiUrl(API_CONFIG.WORKOUTS.WITH_WEIGHTS_BY_ID(workoutWithWeightsId)))
     const workoutWithWeights = response.data
     const workoutId = workoutWithWeights.workout.id
     console.log('Workout ID:', workoutId)
 
-    await axios.delete(`/workoutWithWeights/${workoutWithWeightsId}`)
+    await axios.delete(createApiUrl(API_CONFIG.WORKOUTS.WITH_WEIGHTS_BY_ID(workoutWithWeightsId)))
     console.log(`WorkoutWithWeights mit ID ${workoutWithWeightsId} gelöscht`)
 
-    await axios.delete(`/workout/${workoutId}`)
+    await axios.delete(createApiUrl(API_CONFIG.WORKOUTS.BY_ID(workoutId)))
     console.log('Workout erfolgreich gelöscht')
     loadWorkouts()
   } catch (error) {
@@ -573,7 +574,7 @@ const deleteWorkout = async (workoutWithWeightsId) => {
 
 const duplicateWorkout = async (workoutId) => {
   try {
-    const response = await axios.get(`/workoutWithWeights/${workoutId}`)
+    const response = await axios.get(createApiUrl(API_CONFIG.WORKOUTS.WITH_WEIGHTS_BY_ID(workoutId)))
     const workoutData = response.data
 
     const newWorkout = {
@@ -589,7 +590,7 @@ const duplicateWorkout = async (workoutId) => {
 
     console.log('Neues Workout:', newWorkout)
 
-    const saveWorkoutResponse = await axios.post('/workout', newWorkout)
+    const saveWorkoutResponse = await axios.post(createApiUrl('/workout'), newWorkout)
     const savedWorkout = saveWorkoutResponse.data
 
     const newWorkoutWithWeights = {
@@ -603,7 +604,7 @@ const duplicateWorkout = async (workoutId) => {
       })),
     }
 
-    await axios.post('/OneWorkout', newWorkoutWithWeights)
+    await axios.post(createApiUrl(API_CONFIG.WORKOUTS.ONE_WORKOUT), newWorkoutWithWeights)
     alert('Workout und WorkoutWithWeights erfolgreich dupliziert')
     loadWorkouts()
   } catch (error) {
@@ -667,7 +668,7 @@ canvas {
 
 .filter-section label {
   margin-right: 0.25rem;
-  color: #fff;
+  color: var(--color-text);
 }
 
 .filter-section select {
@@ -707,14 +708,14 @@ canvas {
 .styled-table td {
   padding: 8px;
   text-align: left;
-  color: white;
+  color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .styled-table th {
-  background-color: #1e1e1e;
+  background-color: var(--table-header-bg);
   color: rgb(0, 110, 255);
   text-align: left;
   position: sticky;
@@ -722,11 +723,11 @@ canvas {
 }
 
 .styled-table tr:nth-child(even) {
-  background-color: #2b2b2b;
+  background-color: var(--table-bg-secondary);
 }
 
 .styled-table tr:nth-child(odd) {
-  background-color: #1e1e1e;
+  background-color: var(--table-bg-primary);
 }
 
 .styled-table th:first-child {
@@ -754,7 +755,8 @@ canvas {
 }
 
 .no-workouts {
-  color: #888;
+  color: var(--color-text);
+  opacity: 0.7;
   margin-top: 1rem;
 }
 
@@ -805,8 +807,8 @@ canvas {
   margin-top: 1rem;
   padding: 1rem;
   border-radius: 10px;
-  background-color: #2b2b2b;
-  color: #fff;
+  background-color: var(--exercise-bg);
+  color: var(--color-text);
   text-align: center;
 }
 
@@ -814,7 +816,7 @@ canvas {
   margin: 1.5rem 0;
   padding: 1.5rem;
   border-radius: 15px;
-  background-color: #2b2b2b;
+  background-color: var(--exercise-bg);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 

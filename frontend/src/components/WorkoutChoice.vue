@@ -2,7 +2,7 @@
   <div v-if="workouts.length" class="styled-table">
     <div v-for="(workout, index) in workouts" :key="index" class="row">
       <h3
-        style="margin-bottom: 0px; margin-top: 10px; cursor: pointer; color: #fff"
+        style="margin-bottom: 0px; margin-top: 10px; cursor: pointer"
         @click="$emit('workout-selected', workout.id)"
       >
         {{ workout.name }}
@@ -23,6 +23,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import axios from 'axios'
+import { createApiUrl, API_CONFIG } from '../config/api'
 
 const authStore = useAuthStore()
 const workouts = ref([])
@@ -38,7 +39,7 @@ const loadWorkouts = async () => {
       return
     }
 
-    const response = await axios.get('http://localhost:8080/workouts', {
+    const response = await axios.get(createApiUrl(API_CONFIG.WORKOUTS.ALL), {
       headers: {
         Authorization: `Bearer ${authStore.token}`,
       },
@@ -88,24 +89,29 @@ const handleWorkoutClick = (workoutId) => {
 }
 
 .row:nth-child(even) {
-  background-color: #2b2b2b;
+  background-color: var(--table-bg-secondary);
   border-radius: 30px;
   margin-top: 0.4rem;
 }
 
 .row:nth-child(odd) {
-  background-color: #1e1e1e;
+  background-color: var(--table-bg-primary);
   border-radius: 30px;
   margin-top: 0.4rem;
 }
 
 .row {
   padding: 0.1rem 0rem 0.6rem 1rem;
-  color: white;
+  color: var(--workout-choice-text);
+}
+
+.row h3 {
+  color: var(--workout-choice-text);
 }
 
 .no-workouts {
-  color: #888;
+  color: var(--color-text);
+  opacity: 0.7;
   margin-top: 1rem;
 }
 </style>

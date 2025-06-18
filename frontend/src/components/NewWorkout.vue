@@ -20,7 +20,7 @@
               v-model="übung.customName"
               placeholder="Benutzerdefinierter Übungsname"
               required
-              style="width: 100%; margin-top: 0.5rem"
+              class="custom-input-inline"
             />
           </div>
         </div>
@@ -39,7 +39,7 @@
               v-model="übung.customEquipment"
               placeholder="Benutzerdefiniertes Equipment"
               required
-              style="width: 100%; margin-top: 0.5rem"
+              class="custom-input-inline"
             />
           </div>
         </div>
@@ -71,6 +71,7 @@
 import { ref, vModelCheckbox, onMounted, computed } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import axios from 'axios'
+import { createApiUrl, API_CONFIG } from '../config/api'
 
 const authStore = useAuthStore()
 
@@ -88,7 +89,7 @@ async function fetchWorkouts() {
       return
     }
 
-    const response = await axios.get('http://localhost:8080/workouts')
+    const response = await axios.get(createApiUrl(API_CONFIG.WORKOUTS.ALL))
     console.log('NewWorkout: Workouts geladen:', response.data)
 
     const exercises = response.data.flatMap((workout) => workout.exercise)
@@ -190,7 +191,7 @@ async function submitWorkout() {
 
     console.log('📦 NewWorkout: Gesendete Daten:', JSON.stringify(payload))
 
-    const response = await axios.post('http://localhost:8080/workout', payload)
+    const response = await axios.post(createApiUrl('/workout'), payload)
 
     console.log('NewWorkout: Workout erfolgreich erstellt:', response.data)
     alert('Workout erfolgreich erstellt')
@@ -224,10 +225,17 @@ async function submitWorkout() {
   margin-bottom: 0.5rem;
   padding: 0.5rem;
   border-radius: 10px;
-  border: 0px solid rgba(0, 132, 255, 0.745);
-  background-color: #474747;
-  color: white;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-background-soft);
+  color: var(--color-text);
   outline: none;
+}
+
+.custom-input-inline {
+  width: 100% !important;
+  margin-top: 0.5rem !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
 .exercise input[type='checkbox'] {
   width: auto;
@@ -285,9 +293,9 @@ async function submitWorkout() {
 .input-line {
   padding: 0.5rem 0;
   border: none;
-  border-bottom: 2px solid #ccc;
+  border-bottom: 2px solid var(--color-border);
   background-color: transparent;
-  color: white;
+  color: var(--color-text);
   outline: none;
   width: 100%;
   font-size: large;
@@ -305,15 +313,17 @@ async function submitWorkout() {
 .table td {
   padding: 8px;
   text-align: left;
-  background-color: #363636;
+  background-color: var(--color-background-soft);
+  color: var(--color-text);
 }
 .table th {
-  background-color: #1e1e1e;
+  background-color: var(--color-background-mute);
+  color: var(--color-text);
 }
 
 .exercise_name {
   font-weight: thin;
   font-size: 1.2rem;
-  color: #ffffff;
+  color: var(--color-text);
 }
 </style>

@@ -65,6 +65,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import axios from 'axios'
+import { createApiUrl, API_CONFIG } from '../config/api'
 
 const authStore = useAuthStore()
 const workouts = ref([])
@@ -80,7 +81,7 @@ const loadWorkouts = async () => {
       return
     }
 
-    const response = await axios.get('http://localhost:8080/workouts')
+    const response = await axios.get(createApiUrl(API_CONFIG.WORKOUTS.ALL))
     console.log('WorkoutList: Workouts geladen:', response.data)
     workouts.value = response.data.filter((workout) => workout.show) // Nur Workouts mit show: true anzeigen
   } catch (error) {
@@ -118,7 +119,7 @@ const deleteExercise = async (workoutId, exId) => {
 
   try {
     console.log('WorkoutList: Lösche Übung:', workoutId, exId)
-    const response = await axios.delete(`http://localhost:8080/workout/${workoutId}/${exId}`)
+    const response = await axios.delete(createApiUrl(`/workout/${workoutId}/${exId}`))
     console.log('WorkoutList: Übung erfolgreich gelöscht')
     window.location.reload()
   } catch (error) {
@@ -143,7 +144,7 @@ const deleteWorkout = async (workoutId) => {
 
   try {
     console.log('WorkoutList: Lösche Workout:', workoutId)
-    const response = await axios.delete(`http://localhost:8080/workout/${workoutId}`)
+    const response = await axios.delete(createApiUrl(API_CONFIG.WORKOUTS.BY_ID(workoutId)))
     console.log('WorkoutList: Workout erfolgreich gelöscht')
     loadWorkouts()
   } catch (error) {
@@ -176,22 +177,22 @@ const deleteWorkout = async (workoutId) => {
   border: 0px solid rgb(0, 110, 255);
   padding: 8px;
   text-align: left;
-  color: white;
+  color: var(--color-text);
   width: 100%;
 }
 
 .styled-table th {
-  background-color: #1e1e1e;
+  background-color: var(--table-header-bg);
   color: rgb(0, 110, 255);
   text-align: left;
 }
 
 .styled-table tr:nth-child(even) {
-  background-color: #2b2b2b;
+  background-color: var(--table-bg-secondary);
 }
 
 .styled-table tr:nth-child(odd) {
-  background-color: #1e1e1e;
+  background-color: var(--table-bg-primary);
 }
 .styled-table th:first-child {
   border-top-left-radius: 10px;
@@ -218,7 +219,8 @@ const deleteWorkout = async (workoutId) => {
 }
 
 .no-workouts {
-  color: #888;
+  color: var(--color-text);
+  opacity: 0.7;
   margin-top: 1rem;
 }
 

@@ -160,6 +160,7 @@ import { ref, onMounted, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import axios from 'axios'
+import { createApiUrl, API_CONFIG } from '../config/api'
 
 const props = defineProps({
   workoutId: {
@@ -191,7 +192,7 @@ const loadOptions = async () => {
       return
     }
 
-    const response = await axios.get('http://localhost:8080/workoutsWithWeights')
+    const response = await axios.get(createApiUrl(API_CONFIG.WORKOUTS.WITH_WEIGHTS))
     console.log('OneWorkout: Workout-Optionen geladen:', response.data)
     const data = response.data
     workouts.value = data
@@ -234,7 +235,7 @@ const loadWorkout = async () => {
       return
     }
 
-    const response = await axios.get(`http://localhost:8080/workout/${props.workoutId}`)
+    const response = await axios.get(createApiUrl(API_CONFIG.WORKOUTS.BY_ID(props.workoutId)))
     console.log('OneWorkout: Workout geladen:', response.data)
     const data = response.data
     const loadedWorkout = {
@@ -406,7 +407,7 @@ const saveWorkoutWithWeights = async () => {
     }
 
     console.log('OneWorkout: Korrigierte Payload:', payload)
-    const response = await axios.post('http://localhost:8080/OneWorkout', payload)
+    const response = await axios.post(createApiUrl(API_CONFIG.WORKOUTS.ONE_WORKOUT), payload)
     console.log('OneWorkout: Workout erfolgreich gespeichert:', response.data)
 
     alert('Workout erfolgreich gespeichert')
@@ -436,7 +437,7 @@ onMounted(() => {
   padding: 25px;
   background: none;
   border-radius: 25px;
-  color: #ffffff;
+  color: var(--color-text);
   min-height: 100vh;
   box-shadow:
     0 10px 40px rgba(0, 0, 0, 0.1),
@@ -474,7 +475,7 @@ onMounted(() => {
 
 .subtitle {
   font-size: 1.3em;
-  color: #6b7280;
+  color: var(--color-text);
   margin: 0;
   font-weight: 500;
 }
@@ -484,21 +485,21 @@ onMounted(() => {
 .custom-input {
   border-radius: 18px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  border: 1px solid #4d4d4d;
+  border: 1px solid var(--input-border);
   padding: 8px 14px;
   transition:
     box-shadow 0.2s,
     border-color 0.2s;
   font-size: 1em;
-  background: #3d3d3d;
-  color: #ffffff;
+  background: var(--input-bg);
+  color: var(--color-text);
   margin-bottom: 18px;
   max-width: 100%;
 }
 
 select option {
-  background: #3d3d3d;
-  color: #ffffff;
+  background: var(--input-bg);
+  color: var(--color-text);
 }
 
 select option:disabled {
@@ -566,7 +567,7 @@ select option:disabled {
 }
 
 .exercise-block {
-  background: #2d2d2d;
+  background: var(--exercise-bg);
   border-radius: 18px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   padding: 18px;
@@ -624,7 +625,7 @@ select option:disabled {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #4d4d4d;
+  background: var(--input-bg);
   border-radius: 12px;
   padding: 6px 12px;
   font-size: 1em;
@@ -637,7 +638,7 @@ select option:disabled {
   vertical-align: middle;
   font-size: 1.1em;
   margin: 0 6px;
-  color: #ffffff;
+  color: var(--color-text);
   font-weight: 500;
   line-height: 1;
   height: auto;

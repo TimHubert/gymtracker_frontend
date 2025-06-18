@@ -1,6 +1,7 @@
 // statsApi.js - API Service für Statistiken
+import { createApiUrl, API_CONFIG } from '../config/api'
 
-const BASE_URL = 'http://localhost:8080/api/stats';
+const BASE_URL = createApiUrl(API_CONFIG.STATS.BASE);
 
 export const statsApi = {
   // Haupt-Statistiken (für die Cards)

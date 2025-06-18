@@ -33,6 +33,15 @@
   --color-heading: var(--vt-c-text-light-1);
   --color-text: var(--vt-c-text-light-1);
 
+  /* Extended theme variables for better support */
+  --table-bg-primary: #f8f9fa;
+  --table-bg-secondary: #e9ecef;
+  --table-header-bg: #dee2e6;
+  --exercise-bg: #ffffff;
+  --input-bg: #ffffff;
+  --input-border: #ced4da;
+  --workout-choice-text: #2c3e50;
+
   --section-gap: 160px;
 }
 
@@ -47,6 +56,16 @@
 
     --color-heading: var(--vt-c-text-dark-1);
     --color-text: var(--vt-c-text-dark-2);
+
+    /* Extended theme variables for dark mode */
+    --table-bg-primary: #1e1e1e;
+    --table-bg-secondary: #2b2b2b;
+    --table-header-bg: #1e1e1e;
+    --exercise-bg: #2d2d2d;
+    --input-bg: #3d3d3d;
+    --input-border: #4d4d4d;
+    --workout-choice-text: #ffffff;
+    --workout-choice-text: #ffffff;
   }
 }
 

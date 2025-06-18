@@ -76,7 +76,7 @@ export default {
   border: none;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.1);
-  color: white;
+  color: var(--color-text);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -90,6 +90,7 @@ export default {
 
 .tab-button.active {
   background: linear-gradient(45deg, #1e90ff, #006eff);
+  color: white;
   box-shadow: 0 5px 15px rgba(30, 144, 255, 0.3);
 }
 
@@ -101,7 +102,7 @@ export default {
 .workouts-tab {
   border-radius: 20px;
   padding: 20px;
-  color: white;
+  color: var(--color-text);
 }
 
 .workouts-header {

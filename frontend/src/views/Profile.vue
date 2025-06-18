@@ -147,7 +147,7 @@ onMounted(() => {
 
 h2 {
   text-align: center;
-  color: white;
+  color: var(--color-text);
   margin-bottom: 30px;
   font-size: 1.8em;
 }
@@ -161,7 +161,7 @@ h2 {
 .username-display {
   font-size: 1.5em;
   font-weight: bold;
-  color: white;
+  color: var(--color-text);
 }
 
 .form-group {
@@ -170,7 +170,7 @@ h2 {
 
 label {
   display: block;
-  color: white;
+  color: var(--color-text);
   margin-bottom: 8px;
   font-weight: 600;
 }
@@ -180,8 +180,8 @@ input {
   padding: 12px 16px;
   border: none;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--color-background-soft);
+  color: var(--color-text);
   font-size: 16px;
   transition: all 0.3s ease;
   box-sizing: border-box;
@@ -189,7 +189,7 @@ input {
 
 input:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--color-background-mute);
   box-shadow: 0 0 0 2px rgba(0, 110, 255, 0.5);
 }
 

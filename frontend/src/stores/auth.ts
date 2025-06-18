@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
+import { createApiUrl, API_CONFIG } from '../config/api'
 
 interface User {
   id: number
@@ -38,7 +39,7 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
 
       try {
-        const response = await axios.post('http://localhost:8080/api/auth/login', credentials)
+        const response = await axios.post(createApiUrl(API_CONFIG.AUTH.LOGIN), credentials)
 
         this.token = response.data.token
         this.user = response.data.user
@@ -60,7 +61,7 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
 
       try {
-        const response = await axios.post('http://localhost:8080/api/auth/register', userData)
+        const response = await axios.post(createApiUrl(API_CONFIG.AUTH.REGISTER), userData)
 
         this.token = response.data.token
         this.user = response.data.user
@@ -80,7 +81,7 @@ export const useAuthStore = defineStore('auth', {
     async logout() {
       try {
         if (this.token) {
-          await axios.post('http://localhost:8080/api/auth/logout')
+          await axios.post(createApiUrl(API_CONFIG.AUTH.LOGOUT))
         }
       } catch (error) {
         console.error('Logout error:', error)
@@ -98,7 +99,7 @@ export const useAuthStore = defineStore('auth', {
       if (!this.token) return
 
       try {
-        const response = await axios.get('http://localhost:8080/api/auth/me')
+        const response = await axios.get(createApiUrl(API_CONFIG.AUTH.ME))
         this.user = response.data
       } catch (error) {
         console.error('Get current user error:', error)
@@ -111,7 +112,7 @@ export const useAuthStore = defineStore('auth', {
       this.error = null
 
       try {
-        const response = await axios.put('http://localhost:8080/api/auth/profile', profileData)
+        const response = await axios.put(createApiUrl(API_CONFIG.AUTH.PROFILE), profileData)
         this.user = response.data
         return { success: true }
       } catch (error: unknown) {

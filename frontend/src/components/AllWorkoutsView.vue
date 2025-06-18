@@ -86,6 +86,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '../stores/auth'
 import axios from 'axios'
+import { createApiUrl, API_CONFIG } from '../config/api'
 
 const authStore = useAuthStore()
 const workouts = ref([])
@@ -107,7 +108,7 @@ const loadWorkouts = async () => {
       return
     }
 
-    const response = await axios.get('http://localhost:8080/workoutsWithWeights')
+    const response = await axios.get(createApiUrl(API_CONFIG.WORKOUTS.WITH_WEIGHTS))
     console.log('AllWorkoutsView: Workouts geladen:', response.data)
     workouts.value = response.data
 
@@ -174,17 +175,17 @@ const deleteWorkout = async (workoutWithWeightsId) => {
 
     // Erst WorkoutWithWeights abrufen um Workout ID zu bekommen
     const workoutResponse = await axios.get(
-      `http://localhost:8080/workoutWithWeights/${workoutWithWeightsId}`,
+      createApiUrl(API_CONFIG.WORKOUTS.WITH_WEIGHTS_BY_ID(workoutWithWeightsId)),
     )
     const workoutWithWeights = workoutResponse.data
     const workoutId = workoutWithWeights.workout.id
 
     // WorkoutWithWeights löschen
-    await axios.delete(`http://localhost:8080/workoutWithWeights/${workoutWithWeightsId}`)
+    await axios.delete(createApiUrl(API_CONFIG.WORKOUTS.WITH_WEIGHTS_BY_ID(workoutWithWeightsId)))
     console.log('AllWorkoutsView: WorkoutWithWeights gelöscht')
 
     // Workout löschen
-    await axios.delete(`http://localhost:8080/workout/${workoutId}`)
+    await axios.delete(createApiUrl(API_CONFIG.WORKOUTS.BY_ID(workoutId)))
     console.log('AllWorkoutsView: Workout erfolgreich gelöscht')
 
     loadWorkouts()
@@ -203,7 +204,7 @@ const duplicateWorkout = async (workoutId) => {
   try {
     console.log('AllWorkoutsView: Dupliziere Workout:', workoutId)
 
-    const response = await axios.get(`http://localhost:8080/workoutWithWeights/${workoutId}`)
+    const response = await axios.get(createApiUrl(API_CONFIG.WORKOUTS.WITH_WEIGHTS_BY_ID(workoutId)))
     const workoutData = response.data
 
     const newWorkout = {
@@ -219,7 +220,7 @@ const duplicateWorkout = async (workoutId) => {
 
     console.log('AllWorkoutsView: Neues Workout:', newWorkout)
 
-    const saveWorkoutResponse = await axios.post('http://localhost:8080/workout', newWorkout)
+    const saveWorkoutResponse = await axios.post(createApiUrl('/workout'), newWorkout)
     const savedWorkout = saveWorkoutResponse.data
 
     const newWorkoutWithWeights = {
@@ -233,7 +234,7 @@ const duplicateWorkout = async (workoutId) => {
       })),
     }
 
-    await axios.post('http://localhost:8080/OneWorkout', newWorkoutWithWeights)
+    await axios.post(createApiUrl(API_CONFIG.WORKOUTS.ONE_WORKOUT), newWorkoutWithWeights)
 
     console.log('AllWorkoutsView: Workout erfolgreich dupliziert')
     alert('Workout erfolgreich dupliziert')
@@ -336,14 +337,14 @@ const flattenedWorkouts = computed(() => {
 .styled-table td {
   padding: 8px;
   text-align: left;
-  color: white;
+  color: var(--color-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .styled-table th {
-  background-color: #1e1e1e;
+  background-color: var(--table-header-bg);
   color: rgb(0, 110, 255);
   text-align: left;
   position: sticky;
@@ -351,11 +352,11 @@ const flattenedWorkouts = computed(() => {
 }
 
 .styled-table tr:nth-child(even) {
-  background-color: #2b2b2b;
+  background-color: var(--table-bg-secondary);
 }
 
 .styled-table tr:nth-child(odd) {
-  background-color: #1e1e1e;
+  background-color: var(--table-bg-primary);
 }
 
 .styled-table th:first-child {
@@ -383,7 +384,8 @@ const flattenedWorkouts = computed(() => {
 }
 
 .no-workouts {
-  color: #888;
+  color: var(--color-text);
+  opacity: 0.7;
   margin-top: 1rem;
 }
 

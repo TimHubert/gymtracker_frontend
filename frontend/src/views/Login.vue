@@ -93,7 +93,7 @@ const handleLogin = async () => {
 
 h2 {
   text-align: center;
-  color: white;
+  color: var(--color-text);
   margin-bottom: 30px;
   font-size: 1.8em;
 }
@@ -104,7 +104,7 @@ h2 {
 
 label {
   display: block;
-  color: white;
+  color: var(--color-text);
   margin-bottom: 8px;
   font-weight: 600;
 }
@@ -114,19 +114,20 @@ input {
   padding: 12px 16px;
   border: none;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: var(--color-background-soft);
+  color: var(--color-text);
   font-size: 16px;
   transition: all 0.3s ease;
 }
 
 input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text);
+  opacity: 0.6;
 }
 
 input:focus {
   outline: none;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--color-background-mute);
   box-shadow: 0 0 0 2px rgba(0, 110, 255, 0.5);
 }
 
@@ -175,7 +176,7 @@ input:disabled {
 }
 
 .register-link p {
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--color-text);
   margin: 0;
 }
 
