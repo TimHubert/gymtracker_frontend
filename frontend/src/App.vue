@@ -101,11 +101,7 @@ onMounted(() => {
   padding: 1rem 2rem;
   max-width: cover;
   margin: 0 auto;
-  background-image:
-    linear-gradient(rgba(12, 12, 12, 0.8), rgba(19, 19, 19, 0.8)),
-    url('@/assets/header-background.jpg');
-  background-size: cover;
-  background-position: center;
+  background: linear-gradient(rgba(12, 12, 12, 0.8), rgba(19, 19, 19, 0.8));
   backdrop-filter: blur(10px);
   background-color: transparent;
   border-radius: 1px 0 10px 10px;
