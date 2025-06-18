@@ -6,8 +6,8 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
 export default defineConfig({
-  // Base URL für GitHub Pages (Repository Name)
-  base: process.env.NODE_ENV === 'production' ? '/gymtracker_frontend/' : '/',
+  // Base URL für Deployment (Render = root path)
+  base: '/',
   plugins: [vue(), vueDevTools()],
   resolve: {
     alias: {

@@ -19,12 +19,12 @@ export default defineConfigWithVueTs(
 
   pluginVue.configs['flat/essential'],
   vueTsConfigs.recommended,
-  
+
   {
     ...pluginVitest.configs.recommended,
     files: ['src/**/__tests__/*'],
   },
-  
+
   // Relaxed rules for development
   {
     rules: {
@@ -35,6 +35,6 @@ export default defineConfigWithVueTs(
       '@typescript-eslint/no-empty-object-type': 'off',
     },
   },
-  
+
   skipFormatting,
 )

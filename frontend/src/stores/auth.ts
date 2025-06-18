@@ -23,29 +23,29 @@ export const useAuthStore = defineStore('auth', {
     user: null as User | null,
     token: localStorage.getItem('token') || null,
     isLoading: false,
-    error: null as string | null
+    error: null as string | null,
   }),
 
   getters: {
     isAuthenticated: (state) => !!state.token && !!state.user,
     getUser: (state) => state.user,
-    getError: (state) => state.error
+    getError: (state) => state.error,
   },
 
   actions: {
     async login(credentials: LoginCredentials) {
       this.isLoading = true
       this.error = null
-      
+
       try {
         const response = await axios.post('http://localhost:8080/api/auth/login', credentials)
-        
+
         this.token = response.data.token
         this.user = response.data.user
-        
+
         localStorage.setItem('token', this.token!)
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
-        
+
         return { success: true }
       } catch (error: unknown) {
         this.error = (error as any).response?.data?.message || 'Login fehlgeschlagen'
@@ -58,16 +58,16 @@ export const useAuthStore = defineStore('auth', {
     async register(userData: RegisterData) {
       this.isLoading = true
       this.error = null
-      
+
       try {
         const response = await axios.post('http://localhost:8080/api/auth/register', userData)
-        
+
         this.token = response.data.token
         this.user = response.data.user
-        
+
         localStorage.setItem('token', this.token!)
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
-        
+
         return { success: true }
       } catch (error: unknown) {
         this.error = (error as any).response?.data?.message || 'Registrierung fehlgeschlagen'
@@ -88,7 +88,7 @@ export const useAuthStore = defineStore('auth', {
         this.user = null
         this.token = null
         this.error = null
-        
+
         localStorage.removeItem('token')
         delete axios.defaults.headers.common['Authorization']
       }
@@ -96,7 +96,7 @@ export const useAuthStore = defineStore('auth', {
 
     async getCurrentUser() {
       if (!this.token) return
-      
+
       try {
         const response = await axios.get('http://localhost:8080/api/auth/me')
         this.user = response.data
@@ -109,7 +109,7 @@ export const useAuthStore = defineStore('auth', {
     async updateProfile(profileData: Partial<User>) {
       this.isLoading = true
       this.error = null
-      
+
       try {
         const response = await axios.put('http://localhost:8080/api/auth/profile', profileData)
         this.user = response.data
@@ -131,6 +131,6 @@ export const useAuthStore = defineStore('auth', {
 
     clearError() {
       this.error = null
-    }
-  }
+    },
+  },
 })

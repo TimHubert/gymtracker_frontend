@@ -3,49 +3,49 @@ name: CI Check
 # Trigger der Pipeline
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   # Einfacher Check ob alles funktioniert
   check:
     runs-on: ubuntu-latest
-    
+
     steps:
-    # Repository auschecken
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    # Node.js setup
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'npm'
-        cache-dependency-path: 'frontend/package-lock.json'
-    
-    # In frontend Verzeichnis wechseln und Dependencies installieren
-    - name: Install dependencies
-      working-directory: ./frontend
-      run: npm ci
-    
-    # Type checking
-    - name: Type check
-      working-directory: ./frontend
-      run: npm run type-check
-    
-    # Linting
-    - name: Run ESLint
-      working-directory: ./frontend
-      run: npm run lint
-    
-    # Tests ausführen
-    - name: Run tests
-      working-directory: ./frontend
-      run: npm run test:unit
-    
-    # Build erstellen (prüft ob Build funktioniert)
-    - name: Build application
-      working-directory: ./frontend
-      run: npm run build
+      # Repository auschecken
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Node.js setup
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+          cache-dependency-path: "frontend/package-lock.json"
+
+      # In frontend Verzeichnis wechseln und Dependencies installieren
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      # Type checking
+      - name: Type check
+        working-directory: ./frontend
+        run: npm run type-check
+
+      # Linting
+      - name: Run ESLint
+        working-directory: ./frontend
+        run: npm run lint
+
+      # Tests ausführen
+      - name: Run tests
+        working-directory: ./frontend
+        run: npm run test:unit
+
+      # Build erstellen (prüft ob Build funktioniert)
+      - name: Build application
+        working-directory: ./frontend
+        run: npm run build
