@@ -6,13 +6,12 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    vue(),
-    vueDevTools(),
-  ],
+  // Base URL für GitHub Pages (Repository Name)
+  base: process.env.NODE_ENV === 'production' ? '/gymtracker_frontend/' : '/',
+  plugins: [vue(), vueDevTools()],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
   server: {
@@ -21,34 +20,34 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        secure: false
+        secure: false,
       },
       // Proxy alle anderen Endpunkte (außer /api) an das Backend
       '/workouts': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        secure: false
+        secure: false,
       },
       '/workoutsWithWeights': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        secure: false
+        secure: false,
       },
       '/workout': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        secure: false
+        secure: false,
       },
       '/workoutWithWeights': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        secure: false
+        secure: false,
       },
       '/OneWorkout': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        secure: false
-      }
-    }
-  }
+        secure: false,
+      },
+    },
+  },
 })
