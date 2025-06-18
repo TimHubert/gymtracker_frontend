@@ -6,57 +6,57 @@ import Stats from '../views/Stats.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import Profile from '../views/Profile.vue'
-import editWorkoutWithWeights from '../components/editWorkoutWithWeights.vue'
+import editWorkoutWithWeights from '../components/EditWorkoutWithWeights.vue'
 
 const routes = [
-  { 
-    path: '/login', 
-    name: 'Login', 
+  {
+    path: '/login',
+    name: 'Login',
     component: Login,
-    meta: { requiresGuest: true }
+    meta: { requiresGuest: true },
   },
-  { 
-    path: '/register', 
-    name: 'Register', 
+  {
+    path: '/register',
+    name: 'Register',
     component: Register,
-    meta: { requiresGuest: true }
+    meta: { requiresGuest: true },
   },
-  { 
-    path: '/', 
-    name: 'Home', 
+  {
+    path: '/',
+    name: 'Home',
     component: Home,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
-  { 
-    path: '/tracker', 
-    name: 'TrackerList', 
+  {
+    path: '/tracker',
+    name: 'TrackerList',
     component: Tracker,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
-  { 
-    path: '/stats', 
-    name: 'Stats', 
+  {
+    path: '/stats',
+    name: 'Stats',
     component: Stats,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
-  { 
-    path: '/profile', 
-    name: 'Profile', 
+  {
+    path: '/profile',
+    name: 'Profile',
     component: Profile,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
-  { 
-    path: '/tracker/:id', 
-    name: 'TrackerDetail', 
+  {
+    path: '/tracker/:id',
+    name: 'TrackerDetail',
     component: Tracker,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
   {
     path: '/stats/:id',
     name: 'EditWorkoutWithWeights',
     component: editWorkoutWithWeights,
     props: true,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
 ]
 
@@ -68,7 +68,7 @@ const router = createRouter({
 // Router Guards für Authentifizierung
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
-  
+
   // Authentifizierung initialisieren wenn noch nicht geschehen
   if (authStore.token && !authStore.user) {
     try {
@@ -78,13 +78,13 @@ router.beforeEach(async (to, from, next) => {
       authStore.logout()
     }
   }
-  
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
-  const requiresGuest = to.matched.some(record => record.meta.requiresGuest)
-  
+
+  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
+  const requiresGuest = to.matched.some((record) => record.meta.requiresGuest)
+
   // Prüfe nur auf Token für Authentifizierung, da user asynchron geladen wird
   const isAuthenticated = !!authStore.token
-  
+
   if (requiresAuth && !isAuthenticated) {
     // Benutzer ist nicht authentifiziert, leite zu Login weiter
     next('/login')
