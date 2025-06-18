@@ -115,7 +115,7 @@ describe('WorkoutStats', () => {
       await wrapper.vm.$nextTick()
       await new Promise((resolve) => setTimeout(resolve, 0))
 
-      expect(mockedAxios.get).toHaveBeenCalledWith('/workoutsWithWeights')
+      expect(mockedAxios.get).toHaveBeenCalledWith('http://localhost:8080/workoutsWithWeights')
       expect(wrapper.vm.workouts).toEqual(mockWorkoutsData)
     })
 
