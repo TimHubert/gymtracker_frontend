@@ -47,8 +47,8 @@ export const useAuthStore = defineStore('auth', {
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
         
         return { success: true }
-      } catch (error: any) {
-        this.error = error.response?.data?.message || 'Login fehlgeschlagen'
+      } catch (error: unknown) {
+        this.error = (error as any).response?.data?.message || 'Login fehlgeschlagen'
         return { success: false, error: this.error }
       } finally {
         this.isLoading = false
@@ -69,8 +69,8 @@ export const useAuthStore = defineStore('auth', {
         axios.defaults.headers.common['Authorization'] = `Bearer ${this.token}`
         
         return { success: true }
-      } catch (error: any) {
-        this.error = error.response?.data?.message || 'Registrierung fehlgeschlagen'
+      } catch (error: unknown) {
+        this.error = (error as any).response?.data?.message || 'Registrierung fehlgeschlagen'
         return { success: false, error: this.error }
       } finally {
         this.isLoading = false
@@ -114,8 +114,8 @@ export const useAuthStore = defineStore('auth', {
         const response = await axios.put('http://localhost:8080/api/auth/profile', profileData)
         this.user = response.data
         return { success: true }
-      } catch (error: any) {
-        this.error = error.response?.data?.message || 'Profil-Update fehlgeschlagen'
+      } catch (error: unknown) {
+        this.error = (error as any).response?.data?.message || 'Profil-Update fehlgeschlagen'
         return { success: false, error: this.error }
       } finally {
         this.isLoading = false

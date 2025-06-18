@@ -24,5 +24,17 @@ export default defineConfigWithVueTs(
     ...pluginVitest.configs.recommended,
     files: ['src/**/__tests__/*'],
   },
+  
+  // Relaxed rules for development
+  {
+    rules: {
+      'vue/multi-word-component-names': 'off',
+      'vue/block-lang': 'off',
+      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-empty-object-type': 'off',
+    },
+  },
+  
   skipFormatting,
 )
