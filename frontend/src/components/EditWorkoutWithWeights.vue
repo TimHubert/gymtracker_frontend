@@ -432,7 +432,8 @@ onMounted(async () => {
   font-size: 1em;
   background: var(--input-bg);
   color: var(--color-text);
-  margin-bottom: 18px;
+  margin-bottom: 10px;
+  margin-top: 0px;
   max-width: 100%;
 }
 
@@ -459,7 +460,7 @@ select option:disabled {
     color 0.18s,
     box-shadow 0.18s,
     transform 0.1s;
-  background: #3b82f6; /* Einheitliches Blau statt Gradient */
+  background: rgb(0, 110, 255);
   color: #fff;
   box-shadow: 0 2px 8px rgba(79, 70, 229, 0.08);
 }
@@ -482,11 +483,11 @@ select option:disabled {
 }
 
 .edit-button {
-  background: #f59e0b; /* Einheitliches Orange statt Gradient */
+  background: rgb(77, 77, 77); /* Einheitliches Orange statt Gradient */
 }
 
 .submit-button {
-  background: #3b82f6; /* Einheitliches Blau statt Gradient */
+  background: rgb(0, 110, 255); /* Einheitliches Blau statt Gradient */
 }
 
 .back-button {
@@ -543,13 +544,15 @@ select option:disabled {
   height: 38px;
   padding-top: 0;
   padding-bottom: 0;
-  margin-bottom: 0;
   box-sizing: border-box;
   font-size: 1em;
+  margin-bottom: 6px;
+  margin-top: -2px;
+  outline: none;
 }
 
 .inline-custom-input {
-  width: 120px;
+  width: 180px;
   margin-bottom: 0;
 }
 
@@ -587,6 +590,7 @@ select option:disabled {
   margin-bottom: 0;
   appearance: textfield;
   -moz-appearance: textfield;
+  outline: none;
 }
 .rep-input::-webkit-outer-spin-button,
 .rep-input::-webkit-inner-spin-button,
@@ -656,7 +660,7 @@ select option:disabled {
 
   .rep-input,
   .weight-input {
-    width: 70px; /* von 60px auf 70px erhöht */
+    width: 70px;
     text-align: center;
   }
 
@@ -712,7 +716,7 @@ select option:disabled {
 
   .rep-input,
   .weight-input {
-    width: 55px; /* von 40px auf 55px erhöht */
+    width: 55px; 
     padding: 6px 10px;
     text-align: center;
   }

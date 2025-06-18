@@ -1,6 +1,7 @@
 <template>
   <div class="home">
     <NewWorkout />
+    <br />
     <WorkoutList />
   </div>
 </template>

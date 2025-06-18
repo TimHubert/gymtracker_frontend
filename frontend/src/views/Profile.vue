@@ -260,6 +260,13 @@ input:disabled {
 }
 
 @media (max-width: 480px) {
+
+  .profile-container {
+    padding: 10px;
+    width: 120%;
+    margin-left: -10%;
+  }
+
   .profile-card {
     padding: 30px 20px;
     margin: 10px;

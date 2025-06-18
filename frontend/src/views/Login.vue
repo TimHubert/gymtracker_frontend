@@ -1,7 +1,10 @@
 <template>
   <div class="login-container">
     <div class="login-form">
-      <h2>🏋️‍♂️ Gym Tracker Login</h2>
+      <h2>
+        <img src="/favicon.png" alt="Gym Tracker Logo" class="logo" />
+        Gym Tracker Login
+      </h2>
       
       <form @submit.prevent="handleLogin">
         <div class="form-group">
@@ -91,12 +94,23 @@ const handleLogin = async () => {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
+.logo {
+  width: 30px;
+  height: 30px;
+}
+
 h2 {
   text-align: center;
   color: var(--color-text);
   margin-bottom: 30px;
   font-size: 1.8em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
+
+
 
 .form-group {
   margin-bottom: 20px;

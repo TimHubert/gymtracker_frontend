@@ -1,6 +1,5 @@
 <template>
   <div class="workout-list">
-    <h2>Alle Workouts</h2>
     <div class="filter-section">
       <label for="date-filter">Filter nach Datum:</label>
       <input id="date-filter" type="date" v-model="selectedDate" @change="applyFilters" />
@@ -55,7 +54,7 @@
               <td>
                 <span>
                   <span class="exercise_name">{{ exercise.name }}</span>
-                  ({{ exercise.targetMuscleGroup }})
+                 
                 </span>
               </td>
               <td v-for="setIndex in maxSets(workout.weights)" :key="'data-' + setIndex">
@@ -436,6 +435,7 @@ const flattenedWorkouts = computed(() => {
   .workout-list {
     padding: 0 10px;
     max-height: 100vh;
+    width: 120%;
     overflow-y: auto;
   }
 
@@ -444,7 +444,20 @@ const flattenedWorkouts = computed(() => {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: center;
     gap: 0.3rem;
+  }
+
+  .filter-section {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 90%;
+    margin-left: 5%;
+  }
+
+  .filter-section input,
+  .filter-section select {
+    width: 100%;
   }
 
   .delete-button,
@@ -465,7 +478,6 @@ const flattenedWorkouts = computed(() => {
     width: max-content;
     min-width: 100%;
     display: table;
-    white-space: nowrap;
     table-layout: fixed;
   }
 
@@ -483,34 +495,41 @@ const flattenedWorkouts = computed(() => {
   .styled-table th,
   .styled-table td {
     padding: 6px;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .exercise_name {
+    font-size: 0.85rem;
+    font-weight: medium;
+    display: flex;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 }
 
 @media (max-width: 574px) {
+  h3 {
+    font-size: 0.7rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.3rem;
+  }
   .workout-list {
-    margin: 0;
     padding: 0;
+    max-width: 120%;
+    margin-left: -10%;
+    overflow-x: hidden;
   }
-
-  .styled-table {
-    font-size: 0.8rem;
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
-
-  .styled-table th,
-  .styled-table td {
-    padding: 4px 2px;
-    font-size: 0.75rem;
-  }
-}
-
-@media (max-width: 480px) {
   .filter-section {
     flex-direction: column;
     align-items: flex-start;
+    width: 90%;
+    margin-left: 5%;
   }
 
   .filter-section input,
@@ -518,8 +537,60 @@ const flattenedWorkouts = computed(() => {
     width: 100%;
   }
 
+  .exercise_name {
+    font-size: 0.7rem;
+    font-weight: medium;
+    display: flex;
+  }
+
+  .styled-table {
+    font-size: 0.8rem;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .styled-table th,
+  .styled-table td {
+    padding: 4px 2px;
+    font-size: 0.75rem;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+}
+
+@media (max-width: 480px) {
   h3 {
-    font-size: 0.9rem;
+    font-size: 0.7rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .workout-list {
+    padding: 0;
+    max-width: 120%;
+    margin-left: -10%;
+    overflow-x: hidden;
+  }
+  .filter-section {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 90%;
+    margin-left: 5%;
+  }
+
+  .filter-section input,
+  .filter-section select {
+    width: 100%;
+  }
+
+  .exercise_name {
+    font-size: 0.7rem;
+    font-weight: medium;
+    display: flex;
   }
 
   .styled-table {
@@ -535,6 +606,10 @@ const flattenedWorkouts = computed(() => {
   .styled-table th,
   .styled-table td {
     padding: 4px;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
   }
 }
 </style>

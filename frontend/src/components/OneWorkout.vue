@@ -487,6 +487,7 @@ onMounted(() => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   border: 1px solid var(--input-border);
   padding: 8px 14px;
+  outline: none;
   transition:
     box-shadow 0.2s,
     border-color 0.2s;
@@ -517,7 +518,7 @@ select option:disabled {
   transition:
     background 0.2s,
     transform 0.1s;
-  background: #3b82f6; /* Einheitliches Blau statt Gradient */
+  background: rgb(0, 110, 255); 
   color: #fff;
   box-shadow: 0 2px 8px rgba(79, 70, 229, 0.08);
 }
@@ -544,11 +545,11 @@ select option:disabled {
 }
 
 .edit-button {
-  background: #f59e0b; /* Einheitliches Orange statt Gradient */
+  background: rgb(77, 77, 77); /* Einheitliches Orange statt Gradient */
 }
 
 .submit-button {
-  background: #3b82f6; /* Einheitliches Blau statt Gradient */
+  background: rgb(0, 110, 255); /* Einheitliches Blau statt Gradient */
 }
 
 .back-button {
@@ -604,13 +605,15 @@ select option:disabled {
   height: 38px;
   padding-top: 0;
   padding-bottom: 0;
-  margin-bottom: 0;
+  margin-bottom: 6px;
+  margin-top: -2px;
   box-sizing: border-box;
   font-size: 1em;
+  outline: none;
 }
 
 .inline-custom-input {
-  width: 120px;
+  width: 180px;
 }
 
 .exercise-reps-row {

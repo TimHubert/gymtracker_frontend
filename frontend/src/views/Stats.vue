@@ -7,14 +7,14 @@
         :class="{ active: activeTab === 'charts' }"
         @click="activeTab = 'charts'"
       >
-        📊 Statistiken & Charts
+        Statistiken & Charts
       </button>
       <button
         class="tab-button"
         :class="{ active: activeTab === 'workouts' }"
         @click="activeTab = 'workouts'"
       >
-        📋 Alle Workouts
+        Alle Workouts
       </button>
     </div>
 
@@ -22,13 +22,16 @@
     <div class="tab-content">
       <!-- Charts Tab -->
       <div v-if="activeTab === 'charts'" class="charts-tab">
+          <div class="workouts-header">
+        <h2>📋 Deine Statistiken</h2>
         <WorkoutStats />
+        </div>
       </div>
 
       <!-- Workouts Tab -->
       <div v-if="activeTab === 'workouts'" class="workouts-tab">
         <div class="workouts-header">
-          <h2>📋 Alle deine Workouts</h2>
+          <h2>Alle deine Workouts</h2>
         </div>
         <AllWorkoutsView />
       </div>

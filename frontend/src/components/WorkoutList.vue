@@ -159,6 +159,9 @@ const deleteWorkout = async (workoutId) => {
 </script>
 
 <style scoped>
+.h2 {
+  margin-top: 1rem;
+}
 .workout-list {
   margin-top: 2rem;
 }
@@ -240,6 +243,9 @@ const deleteWorkout = async (workoutId) => {
 
 /* Responsive Design für Handys und Tablets */
 @media (max-width: 768px) {
+  .h2 {
+    margin-top: 1rem;
+  }
   .workout-list {
     padding: 0 10px;
   }
@@ -275,6 +281,10 @@ const deleteWorkout = async (workoutId) => {
 }
 
 @media (max-width: 480px) {
+    .h2 {
+    margin-top: 1rem;
+  }
+  
   h3 {
     font-size: 0.9rem;
   }

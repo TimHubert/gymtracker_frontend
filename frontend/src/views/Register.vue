@@ -1,7 +1,8 @@
 <template>
   <div class="register-container">
     <div class="register-form">
-      <h2>🏋️‍♂️ Gym Tracker Registrierung</h2>
+      <h2>
+        Gym Tracker Registrierung</h2>
       
       <form @submit.prevent="handleRegister">
         <div class="form-group">

@@ -55,6 +55,7 @@
             <img src="@/assets/remove.svg" alt="Löschen" style="width: 15px; height: auto" />
           </button>
         </div>
+        <hr class="exercise-separator" />
       </div>
     </div>
 
@@ -191,7 +192,7 @@ async function submitWorkout() {
 
     console.log('📦 NewWorkout: Gesendete Daten:', JSON.stringify(payload))
 
-    const response = await axios.post(createApiUrl('/workout'), payload)
+    const response = await axios.post('http://localhost:8080/workout', payload)
 
     console.log('NewWorkout: Workout erfolgreich erstellt:', response.data)
     alert('Workout erfolgreich erstellt')
@@ -221,7 +222,7 @@ async function submitWorkout() {
   width: 100%;
   margin-right: 0.5rem;
   margin-left: 0.5rem;
-  margin-top: 0.2rem;
+  margin-top: 0.9rem;
   margin-bottom: 0.5rem;
   padding: 0.5rem;
   border-radius: 10px;
@@ -325,5 +326,13 @@ async function submitWorkout() {
   font-weight: thin;
   font-size: 1.2rem;
   color: var(--color-text);
+}
+
+.exercise-separator {
+  border: none;
+  height: 1px;
+  background-color: var(--color-border);
+  margin: 1rem 0;
+  opacity: 0.5;
 }
 </style>

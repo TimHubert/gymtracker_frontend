@@ -90,23 +90,31 @@ const handleWorkoutClick = (workoutId) => {
 
 .row:nth-child(even) {
   background-color: var(--table-bg-secondary);
-  border-radius: 30px;
+  border-radius: 20px;
   margin-top: 0.4rem;
 }
 
 .row:nth-child(odd) {
   background-color: var(--table-bg-primary);
-  border-radius: 30px;
+  border-radius: 20px;
   margin-top: 0.4rem;
 }
 
 .row {
-  padding: 0.1rem 0rem 0.6rem 1rem;
+  padding: 0.1rem 1rem 1rem;
   color: var(--workout-choice-text);
+  transition: all 0.3s ease;
+}
+
+.row:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  opacity: 0.9;
 }
 
 .row h3 {
   color: var(--workout-choice-text);
+  margin: 0;
 }
 
 .no-workouts {
