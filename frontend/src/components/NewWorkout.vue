@@ -192,7 +192,7 @@ async function submitWorkout() {
 
     console.log('📦 NewWorkout: Gesendete Daten:', JSON.stringify(payload))
 
-    const response = await axios.post('http://localhost:8080/workout', payload)
+    const response = await axios.post(createApiUrl('/workout'), payload)
 
     console.log('NewWorkout: Workout erfolgreich erstellt:', response.data)
     alert('Workout erfolgreich erstellt')
