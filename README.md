@@ -12,7 +12,6 @@ Fitness-Tracker zur Dokumentation und Analyse von Trainingseinheiten.
 - [Technologie-Stack](#technologie-stack)
 - [Installation](#installation)
 - [Verwendung](#verwendung)
-- [API-Endpunkte](#api-endpunkte)
 - [Mitwirkende](#mitwirkende)
 
 ## Über das Projekt
@@ -143,39 +142,6 @@ Nach erfolgreicher Anmeldung siehst du:
    - Gewichtsentwicklung
    - Volumen (Gewicht × Wiederholungen)
    - Trainingsfrequenz
-
-
-## API-Endpunkte
-
-Das Frontend kommuniziert mit folgenden Backend-Endpunkten:
-
-### Authentifizierung
-- `POST /api/auth/register` - Neuen Benutzer registrieren
-- `POST /api/auth/login` - Benutzer anmelden
-- `POST /api/auth/logout` - Benutzer abmelden
-- `GET /api/auth/profile` - Benutzerprofil abrufen
-
-### Workouts
-- `GET /api/workouts` - Alle Workouts abrufen
-- `GET /api/workouts/:id` - Einzelnes Workout abrufen
-- `POST /api/workouts` - Neues Workout erstellen
-- `PUT /api/workouts/:id` - Workout aktualisieren
-- `DELETE /api/workouts/:id` - Workout löschen
-
-### Übungen
-- `GET /api/exercises` - Alle Übungen abrufen
-- `GET /api/exercises/:id` - Einzelne Übung abrufen
-- `POST /api/exercises` - Neue Übung erstellen
-
-### Trainingseinheiten
-- `GET /api/sessions` - Alle Trainingseinheiten abrufen
-- `POST /api/sessions` - Neue Trainingseinheit starten
-- `PUT /api/sessions/:id` - Trainingseinheit aktualisieren
-- `POST /api/sessions/:id/complete` - Trainingseinheit abschließen
-
-### Statistiken
-- `GET /api/statistics/progress` - Fortschrittsdaten abrufen
-- `GET /api/statistics/summary` - Zusammenfassung abrufen
 
 
 ## Mitwirkende
