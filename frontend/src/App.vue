@@ -17,9 +17,9 @@
             </button>
             <div v-if="showUserDropdown" class="user-dropdown">
               <router-link to="/profile" class="dropdown-item" @click="showUserDropdown = false">
-                👤 Profil
+                Profil
               </router-link>
-              <button @click="handleLogout" class="dropdown-item logout-item">🚪 Abmelden</button>
+              <button @click="handleLogout" class="dropdown-item logout-item">Abmelden</button>
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 <template>
   <div v-if="workouts.length === 0" class="no-workouts-message">
     <div class="emoji-box">
-      📊 Keine Workout-Daten verfügbar. Absolviere dein erstes Training, um Statistiken zu sehen!
+       Keine Workout-Daten verfügbar. Absolviere dein erstes Training, um Statistiken zu sehen!
     </div>
   </div>
 
@@ -11,17 +11,41 @@
       <canvas ref="chartCanvas"></canvas>
     </div>
 
-    <div class="emoji-box">🏋️ Insgesamt absolvierte Workouts: {{ totalWorkouts }}</div>
+    <div class="emoji-box">Insgesamt absolvierte Workouts: {{ totalWorkouts }}</div>
 
     <div class="stat-box">
-      <h2>Übungsstatistik</h2>
-      <div class="chart-container">
-        <canvas ref="exerciseChartCanvas"></canvas>
+      <h2>Top 5 Übungen (nach Häufigkeit)</h2>
+      <div class="exercise-table-container">
+        <table class="exercise-ranking-table">
+          <thead>
+            <tr>
+              <th>Rang</th>
+              <th>Übung</th>
+              <th>Häufigkeit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(exercise, index) in topExercises" :key="exercise.name" :class="{ 'first-place': index === 0 }">
+              <td class="rank-cell">{{ index + 1 }}</td>
+              <td class="exercise-name">{{ exercise.name }}</td>
+              <td class="frequency-cell">{{ exercise.count }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
     <div class="stat-box">
-      <h2>Fortschritt über Zeit</h2>
+      <div class="stat-box-header">
+        <h2>Fortschritt über Zeit</h2>
+        <button 
+          @click="toggleLegend" 
+          class="legend-toggle-btn"
+          :class="{ 'active': showLegend }"
+        >
+          {{ showLegend ? 'Legende ausblenden' : 'Legende anzeigen' }}
+        </button>
+      </div>
       <div class="filter-section">
         <label for="exercise-select">Übung auswählen:</label>
         <select id="exercise-select" v-model="selectedExercise" @change="createProgressChart">
@@ -39,7 +63,9 @@
           </option>
         </select>
       </div>
-      <canvas ref="progressChartCanvas"></canvas>
+      <div class="progress-chart-container">
+        <canvas ref="progressChartCanvas"></canvas>
+      </div>
     </div>
   </div>
 </template>
@@ -58,9 +84,23 @@ const exerciseChartCanvas = ref(null)
 const progressChartCanvas = ref(null)
 const selectedExercise = ref('')
 const selectedSet = ref('max') // Standardmäßig maximales Gewicht anzeigen
+const showLegend = ref(false) // Legende standardmäßig ausgeblendet
 let chartInstance = null
-let exerciseChartInstance = null
 let progressChartInstance = null
+
+// Hilfsfunktion für die richtige Textfarbe basierend auf dem Theme
+const getTextColor = () => {
+  // Prüfe ob dark mode aktiv ist
+  const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+  return isDarkMode ? '#fff' : '#1a365d'
+}
+
+// Hilfsfunktion für die richtige Grid-Farbe basierend auf dem Theme
+const getGridColor = () => {
+  // Prüfe ob dark mode aktiv ist
+  const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+  return isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(26, 54, 93, 0.1)'
+}
 
 // Workouts aggregieren
 const workoutCounts = computed(() => {
@@ -105,10 +145,21 @@ onMounted(async () => {
     // Kurze Verzögerung um sicherzustellen, dass DOM bereit ist
     setTimeout(() => {
       createChart()
-      createExerciseChart()
       createProgressChart()
     }, 100)
   }
+
+  // Event Listener für Theme-Änderungen
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+  const handleThemeChange = () => {
+    if (workouts.value.length > 0) {
+      setTimeout(() => {
+        createChart()
+        createProgressChart()
+      }, 100)
+    }
+  }
+  mediaQuery.addEventListener('change', handleThemeChange)
 
   // Watcher für zukünftige Änderungen
   watch(
@@ -117,24 +168,11 @@ onMounted(async () => {
       if (workouts.value.length > 0) {
         setTimeout(() => {
           createChart()
-          createExerciseChart()
           createProgressChart()
         }, 100)
       }
     },
     { immediate: false },
-  )
-
-  watch(
-    filteredWorkouts,
-    () => {
-      if (filteredWorkouts.value.length > 0) {
-        setTimeout(() => {
-          createExerciseChart()
-        }, 100)
-      }
-    },
-    { immediate: true },
   )
 
   watch(
@@ -150,21 +188,48 @@ onMounted(async () => {
   )
 })
 
+const toggleLegend = () => {
+  showLegend.value = !showLegend.value
+  if (workouts.value.length > 0) {
+    setTimeout(() => {
+      createProgressChart()
+    }, 100)
+  }
+}
+
 const createChart = () => {
   if (chartInstance) {
     chartInstance.destroy()
   }
   if (chartCanvas.value) {
     const ctx = chartCanvas.value.getContext('2d')
+    
+    // Farbpalette für Balkendiagramm
+    const colors = [
+      'rgba(0, 110, 255, 1)',    // Blau
+      'rgba(255, 99, 132, 1)',   // Rosa/Rot
+      'rgba(75, 192, 192, 1)',   // Türkis
+      'rgba(255, 159, 64, 1)',   // Orange
+      'rgba(153, 102, 255, 1)',  // Lila
+      'rgba(255, 205, 86, 1)',   // Gelb
+      'rgba(54, 162, 235, 1)',   // Hellblau
+      'rgba(255, 99, 255, 1)',   // Magenta
+      'rgba(199, 199, 199, 1)',  // Grau
+      'rgba(83, 102, 255, 1)',   // Indigo
+    ]
+    
+    const workoutLabels = Object.keys(workoutCounts.value)
+    const workoutColors = workoutLabels.map((_, index) => colors[index % colors.length])
+    
     chartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: Object.keys(workoutCounts.value),
+        labels: workoutLabels,
         datasets: [
           {
             label: 'Häufigkeit',
             data: Object.values(workoutCounts.value),
-            backgroundColor: 'rgba(0, 110, 255, 1)',
+            backgroundColor: workoutColors,
             borderWidth: 0,
             borderColor: 'transparent',
           },
@@ -186,7 +251,7 @@ const createChart = () => {
               font: {
                 family: 'Montserrat',
               },
-              color: '#fff',
+              color: getTextColor(),
             },
             grid: {
               display: false,
@@ -197,7 +262,7 @@ const createChart = () => {
               font: {
                 family: 'Montserrat',
               },
-              color: '#fff',
+              color: getTextColor(),
             },
             grid: {
               display: false,
@@ -223,55 +288,15 @@ const exerciseDistribution = computed(() => {
   return distribution
 })
 
-const createExerciseChart = () => {
-  if (exerciseChartInstance) {
-    exerciseChartInstance.destroy()
-  }
-  if (exerciseChartCanvas.value) {
-    const ctx = exerciseChartCanvas.value.getContext('2d')
-    exerciseChartInstance = new Chart(ctx, {
-      type: 'pie',
-      data: {
-        labels: Object.keys(exerciseDistribution.value),
-        datasets: [
-          {
-            data: Object.values(exerciseDistribution.value),
-            backgroundColor: [
-              'rgba(0, 110, 255, 1)',
-              'rgba(255, 99, 132, 1)',
-              'rgba(75, 192, 192, 1)',
-            ],
-            borderWidth: 0,
-            borderColor: 'transparent',
-          },
-        ],
-      },
-      options: {
-        aspectRatio: 1.5,
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: {
-          padding: {
-            left: 50,
-            right: 50,
-            top: 0,
-            bottom: 0,
-          },
-        },
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              font: {
-                family: 'Montserrat',
-              },
-            },
-          },
-        },
-      },
-    })
-  }
-}
+// Top 5 Übungen nach Häufigkeit sortiert
+const topExercises = computed(() => {
+  const exercises = Object.entries(exerciseDistribution.value)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5)
+  
+  return exercises
+})
 
 // Liste aller verfügbaren Übungen
 const availableExercises = computed(() => {
@@ -503,15 +528,16 @@ const createProgressChart = () => {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
-          display: true,
+          display: showLegend.value,
           position: 'top',
           labels: {
             font: {
               family: 'Montserrat',
             },
-            color: '#fff',
+            color: getTextColor(),
           },
         },
         tooltip: {
@@ -528,7 +554,7 @@ const createProgressChart = () => {
             font: {
               family: 'Montserrat',
             },
-            color: '#fff',
+            color: getTextColor(),
           },
           grid: {
             display: false,
@@ -539,11 +565,11 @@ const createProgressChart = () => {
             font: {
               family: 'Montserrat',
             },
-            color: '#fff',
+            color: getTextColor(),
           },
           grid: {
             display: true,
-            color: 'rgba(255, 255, 255, 0.1)',
+            color: getGridColor(),
           },
           beginAtZero: true,
         },
@@ -839,6 +865,134 @@ canvas {
   margin: 0 auto;
 }
 
+.exercise-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.exercise-ranking-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.exercise-ranking-table th {
+  background-color: rgb(0, 110, 255);
+  color: white;
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.exercise-ranking-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text);
+  font-family: 'Montserrat', sans-serif;
+}
+
+.exercise-ranking-table tr:nth-child(even) {
+  background-color: var(--table-bg-secondary);
+}
+
+.exercise-ranking-table tr:nth-child(odd) {
+  background-color: var(--table-bg-primary);
+}
+
+.exercise-ranking-table tr:last-child td {
+  border-bottom: none;
+}
+
+.rank-cell {
+  text-align: center;
+  font-weight: bold;
+  width: 80px;
+}
+
+.exercise-name {
+  font-weight: 500;
+  text-align: left;
+}
+
+.frequency-cell {
+  text-align: center;
+  font-weight: bold;
+  color: rgb(0, 110, 255);
+  width: 100px;
+}
+
+.first-place .rank-cell {
+  color: #FFD700;
+  font-size: 1.1em;
+}
+
+.first-place .exercise-name {
+  color: rgb(0, 110, 255);
+  font-weight: bold;
+}
+
+.progress-chart-container {
+  width: 100%;
+  height: 500px;
+  margin-top: 1rem;
+  position: relative;
+}
+
+.progress-chart-container canvas {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+}
+
+.legend-toggle-btn {
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  border: none;
+  background-color: rgb(0, 110, 255);
+  color: white;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 1px solid rgb(0, 110, 255);
+}
+
+.legend-toggle-btn:hover {
+  background-color: rgba(0, 110, 255, 0.8);
+  border-color: rgba(0, 110, 255, 0.8);
+  transform: translateY(-1px);
+}
+
+.legend-toggle-btn.active {
+  background-color: rgba(0, 110, 255, 0.1);
+  color: rgb(0, 110, 255);
+  border-color: rgba(0, 110, 255, 0.3);
+}
+
+.legend-toggle-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 110, 255, 0.3);
+}
+
+.stat-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.stat-box-header h2 {
+  margin: 0;
+  color: rgb(0, 110, 255);
+}
+
 @media (max-width: 900px) {
   .workout-list {
     padding: 0 10px;
@@ -895,6 +1049,27 @@ canvas {
   .stat-box {
     padding: 1rem;
   }
+
+  .exercise-ranking-table th,
+  .exercise-ranking-table td {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  .progress-chart-container {
+    height: 400px;
+  }
+
+  .legend-toggle-btn {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .stat-box-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
 }
 
 @media (max-width: 574px) {
@@ -919,6 +1094,27 @@ canvas {
 
   .stat-box {
     padding: 0.75rem;
+  }
+
+  .exercise-ranking-table th,
+  .exercise-ranking-table td {
+    padding: 6px 8px;
+    font-size: 0.8rem;
+  }
+
+  .progress-chart-container {
+    height: 350px;
+  }
+
+  .legend-toggle-btn {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .stat-box-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 }
 
@@ -955,6 +1151,27 @@ canvas {
   .styled-table th,
   .styled-table td {
     padding: 4px;
+  }
+
+  .exercise-ranking-table th,
+  .exercise-ranking-table td {
+    padding: 4px 6px;
+    font-size: 0.75rem;
+  }
+
+  .progress-chart-container {
+    height: 300px;
+  }
+
+  .legend-toggle-btn {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.4rem;
+  }
+
+  .stat-box-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 }
 </style>

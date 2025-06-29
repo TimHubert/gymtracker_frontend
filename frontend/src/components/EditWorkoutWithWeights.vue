@@ -690,12 +690,13 @@ select option:disabled {
 
 @media (max-width: 480px) {
   .stats-dashboard {
-    padding: 15px;
-    margin: 0;
-    width: 100%;
-    min-height: 100vh;
     border-radius: 30px;
+    padding: 15px;
+    width: 120%;
+    margin-left: -10%;
+    min-height: 100vh;
   }
+
 
   h2 {
     font-size: 1.5em;
@@ -716,7 +717,7 @@ select option:disabled {
 
   .rep-input,
   .weight-input {
-    width: 55px; 
+    width: 80px; 
     padding: 6px 10px;
     text-align: center;
   }

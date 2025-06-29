@@ -29,11 +29,11 @@
               <template v-if="isEditing">
                 <div class="inline-input-group">
                   <select v-model="exercise.name" class="input select-input">
-                    <option value="custom">Benutzerdefiniert</option>
                     <option disabled value="">Übungsname auswählen</option>
                     <option v-for="option in exerciseOptions" :key="option" :value="option">
                       {{ option }}
                     </option>
+                    <option value="custom">Benutzerdefiniert</option>
                   </select>
                   <input
                     v-if="exercise.name === 'custom'"
@@ -245,6 +245,7 @@ const loadWorkout = async () => {
       exercises:
         data.exercise.map((ex) => ({
           ...ex,
+          name: ex.name || '', // Sicherstellen, dass name gesetzt ist
           reps: ex.reps || [0, 0, 0],
           weights: ex.weights || [0, 0, 0],
         })) || [],
@@ -330,6 +331,19 @@ const toggleEditMode = () => {
     workout.value = JSON.parse(JSON.stringify(originalWorkout.value))
   } else {
     originalWorkout.value = JSON.parse(JSON.stringify(workout.value))
+    // Sicherstellen, dass alle Übungen korrekte Werte haben
+    workout.value.exercises.forEach(exercise => {
+      // Wenn der Übungsname nicht in den Optionen ist, setze ihn auf 'custom'
+      if (exercise.name && !exerciseOptions.value.includes(exercise.name)) {
+        exercise.customName = exercise.name
+        exercise.name = 'custom'
+      }
+      // Gleiches für Equipment
+      if (exercise.equipment && !equipmentOptions.value.includes(exercise.equipment)) {
+        exercise.customEquipment = exercise.equipment
+        exercise.equipment = 'custom'
+      }
+    })
   }
   isEditing.value = !isEditing.value
 }
@@ -440,8 +454,7 @@ onMounted(() => {
   color: var(--color-text);
   min-height: 100vh;
   box-shadow:
-    0 10px 40px rgba(0, 0, 0, 0.1),
-    0 4px 20px rgba(0, 0, 0, 0.06);
+   none;
   position: relative;
   overflow: hidden;
 }
@@ -571,7 +584,8 @@ select option:disabled {
   background: var(--exercise-bg);
   border-radius: 18px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  padding: 18px;
+  padding: 18px 18px 12px 18px;
+  margin-bottom: 0;
 }
 
 .exercise-details-row {
@@ -777,7 +791,8 @@ select option:disabled {
   .stats-dashboard {
     border-radius: 30px;
     padding: 15px;
-    width: 100%;
+    width: 120%;
+    margin-left: -10%;
     min-height: 100vh;
   }
 
@@ -800,17 +815,9 @@ select option:disabled {
 
   .rep-input,
   .weight-input {
-    width: 55px;
-    height: 38px;
-    padding: 8px 14px;
-    font-size: 1em;
-    border: 1px solid #d1d5db;
-    border-radius: 18px;
-    background: #fff;
-    color: #000000;
-    box-sizing: border-box;
+    width: 80px; 
+    padding: 6px 10px;
     text-align: center;
-    margin-bottom: 0;
   }
 
   .button {

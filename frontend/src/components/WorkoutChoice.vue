@@ -6,13 +6,6 @@
         @click="$emit('workout-selected', workout.id)"
       >
         {{ workout.name }}
-        (<span
-          v-for="(exercise, exIndex) in workout.exercise"
-          :key="exIndex"
-          style="font-weight: bold"
-        >
-          {{ exercise.name }}<span v-if="exIndex < workout.exercise.length - 1">, </span> </span
-        >)
       </h3>
     </div>
   </div>

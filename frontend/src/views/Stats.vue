@@ -23,7 +23,7 @@
       <!-- Charts Tab -->
       <div v-if="activeTab === 'charts'" class="charts-tab">
           <div class="workouts-header">
-        <h2>📋 Deine Statistiken</h2>
+        <h2>Deine Statistiken</h2>
         <WorkoutStats />
         </div>
       </div>
